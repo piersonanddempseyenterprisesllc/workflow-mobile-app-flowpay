@@ -14,10 +14,15 @@ import {
   addMonths,
   isSameMonth,
 } from "date-fns";
-import { Plus, List, Settings, Bell, Trash2, MapPin, Share2, CheckSquare, X } from "lucide-react";
+import {
+  Plus, List, Settings, Bell, Trash2, MapPin, Share2, CheckSquare, X,
+  Sun, Moon, Sunrise, Sunset, Briefcase, Coffee, Plane, Palmtree, Cake,
+  PartyPopper, Stethoscope, Smile, Heart, Calendar as CalendarIcon, Star, Palette,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
