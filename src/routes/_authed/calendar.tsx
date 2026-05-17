@@ -343,7 +343,7 @@ function MonthBlock({
   return (
     <section className="pt-5 pb-2">
       <div className="px-3 flex items-center justify-between mb-3">
-        <h2 className="font-serif text-xl">{format(month, "MMMM yyyy")}</h2>
+        <h2 className="font-serif text-xl md:text-3xl">{format(month, "MMMM yyyy")}</h2>
         <div className="flex items-center gap-1 text-muted-foreground">
           <button className="w-8 h-8 rounded-lg hover:bg-muted/60 flex items-center justify-center"><List className="w-4 h-4" /></button>
           <button className="w-8 h-8 rounded-lg hover:bg-muted/60 flex items-center justify-center"><Settings className="w-4 h-4" /></button>
@@ -352,8 +352,11 @@ function MonthBlock({
       </div>
 
       <div className="grid grid-cols-7 px-2 mb-1">
-        {["Su", "M", "Tu", "W", "Th", "F", "Sa"].map((d, i) => (
-          <div key={i} className="text-center text-[11px] text-muted-foreground font-medium py-1">{d}</div>
+        {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((d, i) => (
+          <div key={i} className="text-center text-[11px] md:text-xs text-muted-foreground font-medium py-1 uppercase tracking-wider">
+            <span className="md:hidden">{d.slice(0, d === "Thursday" ? 2 : d === "Tuesday" ? 2 : d === "Saturday" ? 2 : 1)}</span>
+            <span className="hidden md:inline">{d}</span>
+          </div>
         ))}
       </div>
 
@@ -369,7 +372,7 @@ function MonthBlock({
             <button
               key={key}
               onClick={() => onDayTap(d)}
-              className={`relative bg-background min-h-[68px] flex flex-col items-center pt-2 pb-1 transition-all ${
+              className={`relative bg-background min-h-[68px] md:min-h-[96px] lg:min-h-[120px] flex flex-col items-center pt-2 pb-1 transition-all ${
                 inMonth ? "" : "opacity-30"
               } ${multiMode && isSelected ? "ring-2 ring-primary ring-inset z-10" : ""}`}
             >
@@ -378,11 +381,11 @@ function MonthBlock({
                   className="absolute inset-0 flex flex-col items-center justify-center"
                   style={{ backgroundColor: preset.bg, color: preset.ink }}
                 >
-                  <span className="text-base font-semibold leading-none">{format(d, "d")}</span>
-                  <span className="text-[10px] font-bold mt-1 tracking-wide opacity-95">{preset.code}</span>
+                  <span className="text-base md:text-xl font-semibold leading-none">{format(d, "d")}</span>
+                  <span className="text-[10px] md:text-xs font-bold mt-1 tracking-wide opacity-95">{preset.code}</span>
                 </div>
               ) : (
-                <span className={`text-base ${isToday ? "font-bold text-primary" : "text-foreground/90"}`}>
+                <span className={`text-base md:text-xl ${isToday ? "font-bold text-primary" : "text-foreground/90"}`}>
                   {format(d, "d")}
                 </span>
               )}
