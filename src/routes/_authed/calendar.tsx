@@ -918,18 +918,101 @@ function MonthBlock({
   );
 }
 
+function CustomizePopover({
+  preset,
+  onColorChange,
+  onIconChange,
+}: {
+  preset: ShiftPreset;
+  onColorChange: (id: string, bg: string) => void;
+  onIconChange: (id: string, icon: string) => void;
+}) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          aria-label={`Customize ${preset.label}`}
+          onClick={(e) => e.stopPropagation()}
+          className="absolute right-1.5 top-1.5 w-6 h-6 rounded-full bg-background/80 backdrop-blur flex items-center justify-center shadow-sm hover:scale-110 transition-transform"
+        >
+          <Palette className="w-3 h-3 text-foreground" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-64 p-3 rounded-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
+          Color
+        </div>
+        <div className="grid grid-cols-8 gap-1.5 mb-3">
+          {COLOR_SWATCHES.map((hex) => (
+            <button
+              key={hex}
+              onClick={() => onColorChange(preset.id, hex)}
+              className={`w-6 h-6 rounded-full transition-transform hover:scale-110 ${
+                preset.bg.toLowerCase() === hex.toLowerCase()
+                  ? "ring-2 ring-foreground ring-offset-1"
+                  : ""
+              }`}
+              style={{ backgroundColor: hex }}
+              aria-label={hex}
+            />
+          ))}
+        </div>
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
+          Custom
+        </div>
+        <input
+          type="color"
+          value={preset.bg}
+          onChange={(e) => onColorChange(preset.id, e.target.value)}
+          className="h-8 w-full rounded-lg bg-transparent p-0 cursor-pointer mb-3"
+        />
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
+          Icon
+        </div>
+        <div className="grid grid-cols-8 gap-1">
+          {ICON_KEYS.map((key) => {
+            const Ico = ICON_LIBRARY[key];
+            const active = preset.icon === key;
+            return (
+              <button
+                key={key}
+                onClick={() => onIconChange(preset.id, key)}
+                className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${
+                  active ? "bg-foreground text-background" : "hover:bg-muted text-foreground"
+                }`}
+                aria-label={key}
+              >
+                <Ico className="w-3.5 h-3.5" />
+              </button>
+            );
+          })}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 function ShiftPickerSheet({
   open,
   onOpenChange,
   onPick,
   shiftLibrary,
   onColorChange,
+  onIconChange,
+  themeId,
+  onThemeChange,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   onPick: (p: ShiftPreset) => void;
   shiftLibrary: ShiftPreset[];
   onColorChange: (id: string, bg: string) => void;
+  onIconChange: (id: string, icon: string) => void;
+  themeId: string;
+  onThemeChange: (id: string) => void;
 }) {
   const byCat = useMemo(() => {
     const m: Record<Category, ShiftPreset[]> = {
@@ -944,37 +1027,84 @@ function ShiftPickerSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-3xl max-h-[80dvh] overflow-y-auto">
+      <SheetContent side="bottom" className="rounded-t-3xl max-h-[85dvh] overflow-y-auto">
         <SheetHeader>
           <SheetTitle className="font-serif text-2xl text-left">Pick a shift</SheetTitle>
-          <p className="text-xs text-muted-foreground text-left">Applies to every selected day.</p>
+          <p className="text-xs text-muted-foreground text-left">
+            Tap any shift to apply, or use the palette icon to change its color & symbol.
+          </p>
         </SheetHeader>
-        <div className="space-y-5 mt-4 pb-6">
+
+        {/* Themes */}
+        <div className="mt-4">
+          <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2 px-1">
+            Seasonal Themes
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {THEMES.map((t) => {
+              const active = t.id === themeId;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => onThemeChange(t.id)}
+                  className={`rounded-2xl p-3 text-left border transition-all ${
+                    active
+                      ? "border-foreground bg-foreground/5"
+                      : "border-border hover:border-foreground/40"
+                  }`}
+                >
+                  <div className="flex gap-0.5 mb-1.5">
+                    {t.swatch.map((c, i) => (
+                      <div
+                        key={i}
+                        className="h-3 flex-1 first:rounded-l-full last:rounded-r-full"
+                        style={{ backgroundColor: c }}
+                      />
+                    ))}
+                  </div>
+                  <div className="text-xs font-semibold leading-tight">{t.name}</div>
+                  <div className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+                    {t.description}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="space-y-5 mt-5 pb-6">
           {CATEGORIES.map((c) => (
             <div key={c.id}>
               <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2 px-1">
                 {c.label}
               </div>
               <div className="grid grid-cols-3 gap-2">
-                {byCat[c.id].map((p) => (
-                  <div key={p.id} className="relative">
-                    <button
-                      onClick={() => onPick(p)}
-                      className="w-full rounded-2xl p-3 flex flex-col items-center justify-center min-h-[78px] text-center transition-transform active:scale-95 shadow-sm"
-                      style={{ backgroundColor: p.bg, color: p.ink }}
-                    >
-                      <span className="font-bold text-lg leading-none">{p.code}</span>
-                      <span className="text-[10px] mt-1.5 opacity-90 leading-tight">{p.label}</span>
-                    </button>
-                    <input
-                      aria-label={`${p.label} color`}
-                      type="color"
-                      value={p.bg}
-                      onChange={(e) => onColorChange(p.id, e.target.value)}
-                      className="absolute right-1 top-1 h-6 w-6 rounded-full border border-background bg-transparent p-0"
-                    />
-                  </div>
-                ))}
+                {byCat[c.id].map((p) => {
+                  const Ico = p.icon ? ICON_LIBRARY[p.icon] : null;
+                  return (
+                    <div key={p.id} className="relative">
+                      <button
+                        onClick={() => onPick(p)}
+                        className="w-full rounded-2xl p-3 flex flex-col items-center justify-center min-h-[88px] text-center transition-transform active:scale-95 shadow-sm"
+                        style={{ backgroundColor: p.bg, color: p.ink }}
+                      >
+                        {Ico ? (
+                          <Ico className="w-5 h-5 mb-1 opacity-95" />
+                        ) : (
+                          <span className="font-bold text-lg leading-none">{p.code}</span>
+                        )}
+                        <span className="text-[10px] mt-1 opacity-90 leading-tight font-medium">
+                          {p.label}
+                        </span>
+                      </button>
+                      <CustomizePopover
+                        preset={p}
+                        onColorChange={onColorChange}
+                        onIconChange={onIconChange}
+                      />
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))}
