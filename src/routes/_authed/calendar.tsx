@@ -68,9 +68,68 @@ type ShiftPreset = {
   bg: string;
   ink: string;
   category: Category;
+  icon?: string;
 };
 
-type ShiftColorOverrides = Record<string, { bg: string; ink: string }>;
+type ShiftColorOverrides = Record<string, { bg: string; ink: string; icon?: string }>;
+
+// 8 curated swatches users can quickly pick from
+const COLOR_SWATCHES: string[] = [
+  "#F4C76A", "#E97A5A", "#C44A6C", "#9F6BC4",
+  "#5BA3C7", "#34406B", "#7BB5A4", "#3d5a48",
+];
+
+type Theme = {
+  id: string;
+  name: string;
+  description: string;
+  swatch: string[];
+  colors: Record<string, string>;
+};
+
+const THEMES: Theme[] = [
+  {
+    id: "default",
+    name: "Signature",
+    description: "The classic Workflow palette",
+    swatch: ["#F4C76A", "#E97A5A", "#34406B", "#7BB5A4"],
+    colors: {},
+  },
+  {
+    id: "summer-breeze",
+    name: "Summer Breeze",
+    description: "Soft sand, sea, and citrus",
+    swatch: ["#F8D38A", "#6FB6C9", "#E89B7B", "#7FB89E"],
+    colors: {
+      D7: "#F8D38A", D8: "#FBE3B0", E8: "#E89B7B", N7: "#3C6E91", N8: "#264760",
+      OC: "#B79BD9", OFF: "#E8DFCC", OT: "#D96A6A",
+      PTO: "#6FB6C9", VAC: "#4C9EBD", SICK: "#C2D29C", HOL: "#F0B07A",
+      EVT: "#E89BB8", BDAY: "#F4C95D", MTG: "#9DB0D9",
+      DR: "#7FB89E", DENT: "#A8C7E8", APPT: "#C2A8D9",
+    },
+  },
+  {
+    id: "tropical-sunset",
+    name: "Tropical Sunset",
+    description: "Hibiscus, mango, and palm",
+    swatch: ["#FF7E5F", "#FEB47B", "#8E5A9C", "#2E7D6B"],
+    colors: {
+      D7: "#FEB47B", D8: "#FFD3A8", E8: "#FF7E5F", N7: "#4A2C5A", N8: "#2D1A38",
+      OC: "#8E5A9C", OFF: "#E5DCD0", OT: "#D63E5A",
+      PTO: "#2E7D6B", VAC: "#3FA08A", SICK: "#B8D49B", HOL: "#FF9F6B",
+      EVT: "#E85C8A", BDAY: "#FFB347", MTG: "#7B9DC9",
+      DR: "#4FA890", DENT: "#9CC4DE", APPT: "#B888CC",
+    },
+  },
+];
+
+const ICON_LIBRARY: Record<string, React.ComponentType<{ className?: string }>> = {
+  sun: Sun, moon: Moon, sunrise: Sunrise, sunset: Sunset,
+  briefcase: Briefcase, coffee: Coffee, plane: Plane, umbrella: Umbrella,
+  cake: Cake, party: PartyPopper, stethoscope: Stethoscope, smile: Smile,
+  heart: Heart, calendar: CalendarIcon, star: Star,
+};
+const ICON_KEYS = Object.keys(ICON_LIBRARY);
 
 const DEFAULT_SHIFT_LIBRARY: ShiftPreset[] = [
   // Work
