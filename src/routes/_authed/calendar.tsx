@@ -385,14 +385,22 @@ function CalendarPage() {
 
   function onScroll() {
     const el = scrollerRef.current;
-    if (!el) return;
-    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 400) setMonthsForward((n) => n + 3);
-    if (el.scrollTop < 200) {
-      const prev = el.scrollHeight;
-      setMonthsBack((n) => n + 2);
+    if (!el || loadingRef.current) return;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 600) {
+      loadingRef.current = true;
+      setMonthsForward((n) => n + 6);
       requestAnimationFrame(() => {
-        if (scrollerRef.current)
-          scrollerRef.current.scrollTop += scrollerRef.current.scrollHeight - prev;
+        loadingRef.current = false;
+      });
+    } else if (el.scrollTop < 300) {
+      loadingRef.current = true;
+      const prevHeight = el.scrollHeight;
+      setMonthsBack((n) => n + 6);
+      requestAnimationFrame(() => {
+        if (scrollerRef.current) {
+          scrollerRef.current.scrollTop += scrollerRef.current.scrollHeight - prevHeight;
+        }
+        loadingRef.current = false;
       });
     }
   }
