@@ -18,6 +18,7 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => { if (user) nav({ to: "/calendar" }); }, [user, nav]);
 
