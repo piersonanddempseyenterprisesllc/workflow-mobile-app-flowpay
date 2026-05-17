@@ -14,10 +14,15 @@ import {
   addMonths,
   isSameMonth,
 } from "date-fns";
-import { Plus, List, Settings, Bell, Trash2, MapPin, Share2, CheckSquare, X } from "lucide-react";
+import {
+  Plus, List, Settings, Bell, Trash2, MapPin, Share2, CheckSquare, X,
+  Sun, Moon, Sunrise, Sunset, Briefcase, Coffee, Plane, Umbrella, Cake,
+  PartyPopper, Stethoscope, Smile, Heart, Calendar as CalendarIcon, Star, Palette,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -63,9 +68,68 @@ type ShiftPreset = {
   bg: string;
   ink: string;
   category: Category;
+  icon?: string;
 };
 
-type ShiftColorOverrides = Record<string, { bg: string; ink: string }>;
+type ShiftColorOverrides = Record<string, { bg: string; ink: string; icon?: string }>;
+
+// 8 curated swatches users can quickly pick from
+const COLOR_SWATCHES: string[] = [
+  "#F4C76A", "#E97A5A", "#C44A6C", "#9F6BC4",
+  "#5BA3C7", "#34406B", "#7BB5A4", "#3d5a48",
+];
+
+type Theme = {
+  id: string;
+  name: string;
+  description: string;
+  swatch: string[];
+  colors: Record<string, string>;
+};
+
+const THEMES: Theme[] = [
+  {
+    id: "default",
+    name: "Signature",
+    description: "The classic Workflow palette",
+    swatch: ["#F4C76A", "#E97A5A", "#34406B", "#7BB5A4"],
+    colors: {},
+  },
+  {
+    id: "summer-breeze",
+    name: "Summer Breeze",
+    description: "Soft sand, sea, and citrus",
+    swatch: ["#F8D38A", "#6FB6C9", "#E89B7B", "#7FB89E"],
+    colors: {
+      D7: "#F8D38A", D8: "#FBE3B0", E8: "#E89B7B", N7: "#3C6E91", N8: "#264760",
+      OC: "#B79BD9", OFF: "#E8DFCC", OT: "#D96A6A",
+      PTO: "#6FB6C9", VAC: "#4C9EBD", SICK: "#C2D29C", HOL: "#F0B07A",
+      EVT: "#E89BB8", BDAY: "#F4C95D", MTG: "#9DB0D9",
+      DR: "#7FB89E", DENT: "#A8C7E8", APPT: "#C2A8D9",
+    },
+  },
+  {
+    id: "tropical-sunset",
+    name: "Tropical Sunset",
+    description: "Hibiscus, mango, and palm",
+    swatch: ["#FF7E5F", "#FEB47B", "#8E5A9C", "#2E7D6B"],
+    colors: {
+      D7: "#FEB47B", D8: "#FFD3A8", E8: "#FF7E5F", N7: "#4A2C5A", N8: "#2D1A38",
+      OC: "#8E5A9C", OFF: "#E5DCD0", OT: "#D63E5A",
+      PTO: "#2E7D6B", VAC: "#3FA08A", SICK: "#B8D49B", HOL: "#FF9F6B",
+      EVT: "#E85C8A", BDAY: "#FFB347", MTG: "#7B9DC9",
+      DR: "#4FA890", DENT: "#9CC4DE", APPT: "#B888CC",
+    },
+  },
+];
+
+const ICON_LIBRARY: Record<string, React.ComponentType<{ className?: string }>> = {
+  sun: Sun, moon: Moon, sunrise: Sunrise, sunset: Sunset,
+  briefcase: Briefcase, coffee: Coffee, plane: Plane, umbrella: Umbrella,
+  cake: Cake, party: PartyPopper, stethoscope: Stethoscope, smile: Smile,
+  heart: Heart, calendar: CalendarIcon, star: Star,
+};
+const ICON_KEYS = Object.keys(ICON_LIBRARY);
 
 const DEFAULT_SHIFT_LIBRARY: ShiftPreset[] = [
   // Work
@@ -254,6 +318,14 @@ const DEFAULT_SHIFT_LIBRARY: ShiftPreset[] = [
   },
 ];
 
+const DEFAULT_ICONS: Record<string, string> = {
+  D7: "sun", D8: "sunrise", E8: "sunset", N7: "moon", N8: "moon",
+  OC: "briefcase", OFF: "coffee", OT: "star",
+  PTO: "umbrella", VAC: "plane", SICK: "smile", HOL: "party",
+  EVT: "calendar", BDAY: "cake", MTG: "briefcase",
+  DR: "stethoscope", DENT: "smile", APPT: "heart",
+};
+
 function presetFor(
   s: Shift,
   library: ShiftPreset[],
@@ -297,6 +369,7 @@ function CalendarPage() {
   const [selectedDays, setSelectedDays] = useState<Set<string>>(new Set());
   const [pickerOpen, setPickerOpen] = useState(false);
   const [colorOverrides, setColorOverrides] = useState<ShiftColorOverrides>({});
+  const [themeId, setThemeId] = useState<string>("default");
 
   // Anchor "today" to mount-time start-of-month so month list stays accurate
   // across re-renders and grows symmetrically as the user scrolls.
@@ -331,16 +404,26 @@ function CalendarPage() {
   useEffect(() => {
     const saved = window.localStorage.getItem("nurse-grid-shift-colors");
     if (saved) setColorOverrides(JSON.parse(saved) as ShiftColorOverrides);
+    const savedTheme = window.localStorage.getItem("nurse-grid-theme");
+    if (savedTheme) setThemeId(savedTheme);
   }, []);
+
+  const activeTheme = useMemo(
+    () => THEMES.find((t) => t.id === themeId) ?? THEMES[0],
+    [themeId],
+  );
 
   const shiftLibrary = useMemo(
     () =>
-      DEFAULT_SHIFT_LIBRARY.map((p) => ({
-        ...p,
-        bg: colorOverrides[p.id]?.bg ?? p.bg,
-        ink: colorOverrides[p.id]?.ink ?? p.ink,
-      })),
-    [colorOverrides],
+      DEFAULT_SHIFT_LIBRARY.map((p) => {
+        const themeBg = activeTheme.colors[p.id];
+        const override = colorOverrides[p.id];
+        const bg = override?.bg ?? themeBg ?? p.bg;
+        const ink = override?.ink ?? (themeBg ? textColorFor(themeBg) : p.ink);
+        const icon = override?.icon ?? p.icon ?? DEFAULT_ICONS[p.id];
+        return { ...p, bg, ink, icon };
+      }),
+    [colorOverrides, activeTheme],
   );
 
   const libById = useMemo(() => new Map(shiftLibrary.map((p) => [p.id, p])), [shiftLibrary]);
@@ -479,9 +562,35 @@ function CalendarPage() {
     .toUpperCase();
 
   function updateShiftColor(id: string, bg: string) {
-    const next = { ...colorOverrides, [id]: { bg, ink: textColorFor(bg) } };
+    const existing = colorOverrides[id];
+    const next = { ...colorOverrides, [id]: { bg, ink: textColorFor(bg), icon: existing?.icon } };
     setColorOverrides(next);
     window.localStorage.setItem("nurse-grid-shift-colors", JSON.stringify(next));
+  }
+
+  function updateShiftIcon(id: string, icon: string) {
+    const existing = colorOverrides[id];
+    const preset = DEFAULT_SHIFT_LIBRARY.find((p) => p.id === id);
+    const fallbackBg = activeTheme.colors[id] ?? preset?.bg ?? "#cccccc";
+    const next = {
+      ...colorOverrides,
+      [id]: {
+        bg: existing?.bg ?? fallbackBg,
+        ink: existing?.ink ?? textColorFor(fallbackBg),
+        icon,
+      },
+    };
+    setColorOverrides(next);
+    window.localStorage.setItem("nurse-grid-shift-colors", JSON.stringify(next));
+  }
+
+  function applyTheme(id: string) {
+    setThemeId(id);
+    window.localStorage.setItem("nurse-grid-theme", id);
+    // Clear per-shift colour overrides so theme palette takes effect cleanly
+    setColorOverrides({});
+    window.localStorage.removeItem("nurse-grid-shift-colors");
+    toast.success(`Theme: ${THEMES.find((t) => t.id === id)?.name}`);
   }
 
   return (
@@ -620,6 +729,9 @@ function CalendarPage() {
         onPick={applyPresetToSelection}
         shiftLibrary={shiftLibrary}
         onColorChange={updateShiftColor}
+        onIconChange={updateShiftIcon}
+        themeId={themeId}
+        onThemeChange={applyTheme}
       />
 
       {/* Single-day dialog */}
@@ -776,9 +888,16 @@ function MonthBlock({
                   <span className="text-base md:text-xl font-semibold leading-none">
                     {format(d, "d")}
                   </span>
-                  <span className="text-[10px] md:text-xs font-bold mt-1 tracking-wide opacity-95">
-                    {preset.code}
-                  </span>
+                  {preset.icon && ICON_LIBRARY[preset.icon] ? (
+                    (() => {
+                      const Ico = ICON_LIBRARY[preset.icon];
+                      return <Ico className="w-3.5 h-3.5 md:w-4 md:h-4 mt-1 opacity-90" />;
+                    })()
+                  ) : (
+                    <span className="text-[10px] md:text-xs font-bold mt-1 tracking-wide opacity-95">
+                      {preset.code}
+                    </span>
+                  )}
                 </div>
               ) : (
                 <span
@@ -799,18 +918,101 @@ function MonthBlock({
   );
 }
 
+function CustomizePopover({
+  preset,
+  onColorChange,
+  onIconChange,
+}: {
+  preset: ShiftPreset;
+  onColorChange: (id: string, bg: string) => void;
+  onIconChange: (id: string, icon: string) => void;
+}) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          aria-label={`Customize ${preset.label}`}
+          onClick={(e) => e.stopPropagation()}
+          className="absolute right-1.5 top-1.5 w-6 h-6 rounded-full bg-background/80 backdrop-blur flex items-center justify-center shadow-sm hover:scale-110 transition-transform"
+        >
+          <Palette className="w-3 h-3 text-foreground" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-64 p-3 rounded-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
+          Color
+        </div>
+        <div className="grid grid-cols-8 gap-1.5 mb-3">
+          {COLOR_SWATCHES.map((hex) => (
+            <button
+              key={hex}
+              onClick={() => onColorChange(preset.id, hex)}
+              className={`w-6 h-6 rounded-full transition-transform hover:scale-110 ${
+                preset.bg.toLowerCase() === hex.toLowerCase()
+                  ? "ring-2 ring-foreground ring-offset-1"
+                  : ""
+              }`}
+              style={{ backgroundColor: hex }}
+              aria-label={hex}
+            />
+          ))}
+        </div>
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
+          Custom
+        </div>
+        <input
+          type="color"
+          value={preset.bg}
+          onChange={(e) => onColorChange(preset.id, e.target.value)}
+          className="h-8 w-full rounded-lg bg-transparent p-0 cursor-pointer mb-3"
+        />
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
+          Icon
+        </div>
+        <div className="grid grid-cols-8 gap-1">
+          {ICON_KEYS.map((key) => {
+            const Ico = ICON_LIBRARY[key];
+            const active = preset.icon === key;
+            return (
+              <button
+                key={key}
+                onClick={() => onIconChange(preset.id, key)}
+                className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${
+                  active ? "bg-foreground text-background" : "hover:bg-muted text-foreground"
+                }`}
+                aria-label={key}
+              >
+                <Ico className="w-3.5 h-3.5" />
+              </button>
+            );
+          })}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 function ShiftPickerSheet({
   open,
   onOpenChange,
   onPick,
   shiftLibrary,
   onColorChange,
+  onIconChange,
+  themeId,
+  onThemeChange,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   onPick: (p: ShiftPreset) => void;
   shiftLibrary: ShiftPreset[];
   onColorChange: (id: string, bg: string) => void;
+  onIconChange: (id: string, icon: string) => void;
+  themeId: string;
+  onThemeChange: (id: string) => void;
 }) {
   const byCat = useMemo(() => {
     const m: Record<Category, ShiftPreset[]> = {
@@ -825,37 +1027,84 @@ function ShiftPickerSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-3xl max-h-[80dvh] overflow-y-auto">
+      <SheetContent side="bottom" className="rounded-t-3xl max-h-[85dvh] overflow-y-auto">
         <SheetHeader>
           <SheetTitle className="font-serif text-2xl text-left">Pick a shift</SheetTitle>
-          <p className="text-xs text-muted-foreground text-left">Applies to every selected day.</p>
+          <p className="text-xs text-muted-foreground text-left">
+            Tap any shift to apply, or use the palette icon to change its color & symbol.
+          </p>
         </SheetHeader>
-        <div className="space-y-5 mt-4 pb-6">
+
+        {/* Themes */}
+        <div className="mt-4">
+          <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2 px-1">
+            Seasonal Themes
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {THEMES.map((t) => {
+              const active = t.id === themeId;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => onThemeChange(t.id)}
+                  className={`rounded-2xl p-3 text-left border transition-all ${
+                    active
+                      ? "border-foreground bg-foreground/5"
+                      : "border-border hover:border-foreground/40"
+                  }`}
+                >
+                  <div className="flex gap-0.5 mb-1.5">
+                    {t.swatch.map((c, i) => (
+                      <div
+                        key={i}
+                        className="h-3 flex-1 first:rounded-l-full last:rounded-r-full"
+                        style={{ backgroundColor: c }}
+                      />
+                    ))}
+                  </div>
+                  <div className="text-xs font-semibold leading-tight">{t.name}</div>
+                  <div className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+                    {t.description}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="space-y-5 mt-5 pb-6">
           {CATEGORIES.map((c) => (
             <div key={c.id}>
               <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2 px-1">
                 {c.label}
               </div>
               <div className="grid grid-cols-3 gap-2">
-                {byCat[c.id].map((p) => (
-                  <div key={p.id} className="relative">
-                    <button
-                      onClick={() => onPick(p)}
-                      className="w-full rounded-2xl p-3 flex flex-col items-center justify-center min-h-[78px] text-center transition-transform active:scale-95 shadow-sm"
-                      style={{ backgroundColor: p.bg, color: p.ink }}
-                    >
-                      <span className="font-bold text-lg leading-none">{p.code}</span>
-                      <span className="text-[10px] mt-1.5 opacity-90 leading-tight">{p.label}</span>
-                    </button>
-                    <input
-                      aria-label={`${p.label} color`}
-                      type="color"
-                      value={p.bg}
-                      onChange={(e) => onColorChange(p.id, e.target.value)}
-                      className="absolute right-1 top-1 h-6 w-6 rounded-full border border-background bg-transparent p-0"
-                    />
-                  </div>
-                ))}
+                {byCat[c.id].map((p) => {
+                  const Ico = p.icon ? ICON_LIBRARY[p.icon] : null;
+                  return (
+                    <div key={p.id} className="relative">
+                      <button
+                        onClick={() => onPick(p)}
+                        className="w-full rounded-2xl p-3 flex flex-col items-center justify-center min-h-[88px] text-center transition-transform active:scale-95 shadow-sm"
+                        style={{ backgroundColor: p.bg, color: p.ink }}
+                      >
+                        {Ico ? (
+                          <Ico className="w-5 h-5 mb-1 opacity-95" />
+                        ) : (
+                          <span className="font-bold text-lg leading-none">{p.code}</span>
+                        )}
+                        <span className="text-[10px] mt-1 opacity-90 leading-tight font-medium">
+                          {p.label}
+                        </span>
+                      </button>
+                      <CustomizePopover
+                        preset={p}
+                        onColorChange={onColorChange}
+                        onIconChange={onIconChange}
+                      />
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))}
