@@ -4,28 +4,45 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import {
-  format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay,
-  startOfWeek, endOfWeek, addMonths, isSameMonth,
+  format,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  isSameDay,
+  startOfWeek,
+  endOfWeek,
+  addMonths,
+  isSameMonth,
 } from "date-fns";
-import {
-  Plus, List, Settings, Bell, Trash2, MapPin, Share2, CheckSquare, X,
-} from "lucide-react";
+import { Plus, List, Settings, Bell, Trash2, MapPin, Share2, CheckSquare, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authed/calendar")({ component: CalendarPage });
 
 type Shift = {
-  id: string; user_id: string; date: string;
-  start_time: string; end_time: string; type: string;
-  notes: string | null; category: string;
-  location: string | null; title: string | null;
+  id: string;
+  user_id: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  type: string;
+  notes: string | null;
+  category: string;
+  location: string | null;
+  title: string | null;
 };
 
 type Category = "work" | "vacation" | "event" | "appointment";
@@ -38,46 +55,217 @@ const CATEGORIES: { id: Category; label: string }[] = [
 
 // NurseGrid-style shift library: code + colour + default times.
 type ShiftPreset = {
-  id: string; code: string; label: string;
-  start: string; end: string; bg: string; ink: string;
+  id: string;
+  code: string;
+  label: string;
+  start: string;
+  end: string;
+  bg: string;
+  ink: string;
   category: Category;
 };
 
-const SHIFT_LIBRARY: ShiftPreset[] = [
+type ShiftColorOverrides = Record<string, { bg: string; ink: string }>;
+
+const DEFAULT_SHIFT_LIBRARY: ShiftPreset[] = [
   // Work
-  { id: "D7",  code: "D",   label: "Day 7a–7p",     start: "07:00", end: "19:00", bg: "#F4C76A", ink: "#3a2a05", category: "work" },
-  { id: "D8",  code: "D8",  label: "Day 7a–3p",     start: "07:00", end: "15:00", bg: "#F8DE9B", ink: "#3a2a05", category: "work" },
-  { id: "E8",  code: "E",   label: "Evening 3p–11p", start: "15:00", end: "23:00", bg: "#E97A5A", ink: "#fff",    category: "work" },
-  { id: "N7",  code: "N",   label: "Night 7p–7a",   start: "19:00", end: "07:00", bg: "#34406B", ink: "#fff",    category: "work" },
-  { id: "N8",  code: "N8",  label: "Night 11p–7a",  start: "23:00", end: "07:00", bg: "#1F2647", ink: "#fff",    category: "work" },
-  { id: "OC",  code: "OC",  label: "On-call",       start: "08:00", end: "20:00", bg: "#9F6BC4", ink: "#fff",    category: "work" },
-  { id: "OFF", code: "OFF", label: "Off",           start: "00:00", end: "00:00", bg: "#D7DBD3", ink: "#384a3a", category: "work" },
-  { id: "OT",  code: "OT",  label: "Overtime",      start: "07:00", end: "23:00", bg: "#C44A6C", ink: "#fff",    category: "work" },
+  {
+    id: "D7",
+    code: "D",
+    label: "Day 7a–7p",
+    start: "07:00",
+    end: "19:00",
+    bg: "#F4C76A",
+    ink: "#3a2a05",
+    category: "work",
+  },
+  {
+    id: "D8",
+    code: "D8",
+    label: "Day 7a–3p",
+    start: "07:00",
+    end: "15:00",
+    bg: "#F8DE9B",
+    ink: "#3a2a05",
+    category: "work",
+  },
+  {
+    id: "E8",
+    code: "E",
+    label: "Evening 3p–11p",
+    start: "15:00",
+    end: "23:00",
+    bg: "#E97A5A",
+    ink: "#fff",
+    category: "work",
+  },
+  {
+    id: "N7",
+    code: "N",
+    label: "Night 7p–7a",
+    start: "19:00",
+    end: "07:00",
+    bg: "#34406B",
+    ink: "#fff",
+    category: "work",
+  },
+  {
+    id: "N8",
+    code: "N8",
+    label: "Night 11p–7a",
+    start: "23:00",
+    end: "07:00",
+    bg: "#1F2647",
+    ink: "#fff",
+    category: "work",
+  },
+  {
+    id: "OC",
+    code: "OC",
+    label: "On-call",
+    start: "08:00",
+    end: "20:00",
+    bg: "#9F6BC4",
+    ink: "#fff",
+    category: "work",
+  },
+  {
+    id: "OFF",
+    code: "OFF",
+    label: "Off",
+    start: "00:00",
+    end: "00:00",
+    bg: "#D7DBD3",
+    ink: "#384a3a",
+    category: "work",
+  },
+  {
+    id: "OT",
+    code: "OT",
+    label: "Overtime",
+    start: "07:00",
+    end: "23:00",
+    bg: "#C44A6C",
+    ink: "#fff",
+    category: "work",
+  },
   // Vacation
-  { id: "PTO", code: "PTO", label: "Paid time off", start: "00:00", end: "00:00", bg: "#7BB5A4", ink: "#fff",    category: "vacation" },
-  { id: "VAC", code: "VAC", label: "Vacation",      start: "00:00", end: "00:00", bg: "#5BA3C7", ink: "#fff",    category: "vacation" },
-  { id: "SICK",code: "S",   label: "Sick",          start: "00:00", end: "00:00", bg: "#B5C28F", ink: "#2c361f", category: "vacation" },
-  { id: "HOL", code: "H",   label: "Holiday",       start: "00:00", end: "00:00", bg: "#E8A87C", ink: "#3b1f10", category: "vacation" },
+  {
+    id: "PTO",
+    code: "PTO",
+    label: "Paid time off",
+    start: "00:00",
+    end: "00:00",
+    bg: "#7BB5A4",
+    ink: "#fff",
+    category: "vacation",
+  },
+  {
+    id: "VAC",
+    code: "VAC",
+    label: "Vacation",
+    start: "00:00",
+    end: "00:00",
+    bg: "#5BA3C7",
+    ink: "#fff",
+    category: "vacation",
+  },
+  {
+    id: "SICK",
+    code: "S",
+    label: "Sick",
+    start: "00:00",
+    end: "00:00",
+    bg: "#B5C28F",
+    ink: "#2c361f",
+    category: "vacation",
+  },
+  {
+    id: "HOL",
+    code: "H",
+    label: "Holiday",
+    start: "00:00",
+    end: "00:00",
+    bg: "#E8A87C",
+    ink: "#3b1f10",
+    category: "vacation",
+  },
   // Events
-  { id: "EVT", code: "EVT", label: "Event",         start: "18:00", end: "21:00", bg: "#D67BA8", ink: "#fff",    category: "event" },
-  { id: "BDAY",code: "BD",  label: "Birthday",      start: "00:00", end: "00:00", bg: "#E8C547", ink: "#3a2a05", category: "event" },
-  { id: "MTG", code: "M",   label: "Meeting",       start: "10:00", end: "11:00", bg: "#8E9DCC", ink: "#fff",    category: "event" },
+  {
+    id: "EVT",
+    code: "EVT",
+    label: "Event",
+    start: "18:00",
+    end: "21:00",
+    bg: "#D67BA8",
+    ink: "#fff",
+    category: "event",
+  },
+  {
+    id: "BDAY",
+    code: "BD",
+    label: "Birthday",
+    start: "00:00",
+    end: "00:00",
+    bg: "#E8C547",
+    ink: "#3a2a05",
+    category: "event",
+  },
+  {
+    id: "MTG",
+    code: "M",
+    label: "Meeting",
+    start: "10:00",
+    end: "11:00",
+    bg: "#8E9DCC",
+    ink: "#fff",
+    category: "event",
+  },
   // Appointments
-  { id: "DR",  code: "DR",  label: "Doctor",        start: "09:00", end: "10:00", bg: "#6FB1A8", ink: "#fff",    category: "appointment" },
-  { id: "DENT",code: "DT",  label: "Dentist",       start: "09:00", end: "10:00", bg: "#A8C5E6", ink: "#1a2e4a", category: "appointment" },
-  { id: "APPT",code: "APT", label: "Appointment",   start: "09:00", end: "10:00", bg: "#B89BC9", ink: "#fff",    category: "appointment" },
+  {
+    id: "DR",
+    code: "DR",
+    label: "Doctor",
+    start: "09:00",
+    end: "10:00",
+    bg: "#6FB1A8",
+    ink: "#fff",
+    category: "appointment",
+  },
+  {
+    id: "DENT",
+    code: "DT",
+    label: "Dentist",
+    start: "09:00",
+    end: "10:00",
+    bg: "#A8C5E6",
+    ink: "#1a2e4a",
+    category: "appointment",
+  },
+  {
+    id: "APPT",
+    code: "APT",
+    label: "Appointment",
+    start: "09:00",
+    end: "10:00",
+    bg: "#B89BC9",
+    ink: "#fff",
+    category: "appointment",
+  },
 ];
 
-const LIB_BY_ID = new Map(SHIFT_LIBRARY.map((p) => [p.id, p]));
-
-function presetFor(s: Shift): ShiftPreset | null {
+function presetFor(
+  s: Shift,
+  library: ShiftPreset[],
+  libById: Map<string, ShiftPreset>,
+): ShiftPreset | null {
   // type column stores either preset id (new) or legacy label
-  if (LIB_BY_ID.has(s.type)) return LIB_BY_ID.get(s.type)!;
+  if (libById.has(s.type)) return libById.get(s.type)!;
   // Legacy fallback by label match within library
-  const legacy = SHIFT_LIBRARY.find((p) => p.label.startsWith(s.type) || p.code === s.type);
+  const legacy = library.find((p) => p.label.startsWith(s.type) || p.code === s.type);
   if (legacy) return legacy;
   // Category fallback
-  return SHIFT_LIBRARY.find((p) => p.category === (s.category as Category)) ?? null;
+  return library.find((p) => p.category === (s.category as Category)) ?? null;
 }
 
 function shiftHours(start: string, end: string): number {
@@ -86,6 +274,15 @@ function shiftHours(start: string, end: string): number {
   let mins = eh * 60 + em - (sh * 60 + sm);
   if (mins < 0) mins += 24 * 60;
   return mins / 60;
+}
+
+function textColorFor(hex: string) {
+  const value = hex.replace("#", "");
+  const r = parseInt(value.slice(0, 2), 16);
+  const g = parseInt(value.slice(2, 4), 16);
+  const b = parseInt(value.slice(4, 6), 16);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.62 ? "#1f2933" : "#ffffff";
 }
 
 function CalendarPage() {
@@ -99,6 +296,7 @@ function CalendarPage() {
   const [multiMode, setMultiMode] = useState(false);
   const [selectedDays, setSelectedDays] = useState<Set<string>>(new Set());
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [colorOverrides, setColorOverrides] = useState<ShiftColorOverrides>({});
 
   const today = new Date();
   const [monthsBack, setMonthsBack] = useState(2);
@@ -112,16 +310,37 @@ function CalendarPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [monthsBack, monthsForward]);
 
+  useEffect(() => {
+    const saved = window.localStorage.getItem("nurse-grid-shift-colors");
+    if (saved) setColorOverrides(JSON.parse(saved) as ShiftColorOverrides);
+  }, []);
+
+  const shiftLibrary = useMemo(
+    () =>
+      DEFAULT_SHIFT_LIBRARY.map((p) => ({
+        ...p,
+        bg: colorOverrides[p.id]?.bg ?? p.bg,
+        ink: colorOverrides[p.id]?.ink ?? p.ink,
+      })),
+    [colorOverrides],
+  );
+
+  const libById = useMemo(() => new Map(shiftLibrary.map((p) => [p.id, p])), [shiftLibrary]);
+
   const rangeStart = format(startOfMonth(months[0]), "yyyy-MM-dd");
   const rangeEnd = format(endOfMonth(months[months.length - 1]), "yyyy-MM-dd");
 
   const { data: shifts = [] } = useQuery({
     queryKey: ["shifts", user?.id, rangeStart, rangeEnd, activeCat],
     queryFn: async () => {
-      const { data } = await supabase.from("shifts").select("*")
+      const { data } = await supabase
+        .from("shifts")
+        .select("*")
         .eq("user_id", user!.id)
         .eq("category", activeCat)
-        .gte("date", rangeStart).lte("date", rangeEnd).order("date");
+        .gte("date", rangeStart)
+        .lte("date", rangeEnd)
+        .order("date");
       return (data ?? []) as Shift[];
     },
     enabled: !!user,
@@ -130,7 +349,11 @@ function CalendarPage() {
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("full_name, avatar_url").eq("id", user!.id).maybeSingle();
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name, avatar_url")
+        .eq("id", user!.id)
+        .maybeSingle();
       return data;
     },
     enabled: !!user,
@@ -150,20 +373,22 @@ function CalendarPage() {
       const prev = el.scrollHeight;
       setMonthsBack((n) => n + 2);
       requestAnimationFrame(() => {
-        if (scrollerRef.current) scrollerRef.current.scrollTop += scrollerRef.current.scrollHeight - prev;
+        if (scrollerRef.current)
+          scrollerRef.current.scrollTop += scrollerRef.current.scrollHeight - prev;
       });
     }
   }
 
   function onDayTap(d: Date) {
     const key = format(d, "yyyy-MM-dd");
-    if (multiMode) {
-      const next = new Set(selectedDays);
-      next.has(key) ? next.delete(key) : next.add(key);
-      setSelectedDays(next);
-    } else {
-      setSelected(d);
-    }
+    setMultiMode(true);
+    setSelected(null);
+    setSelectedDays((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
   }
 
   function enterMultiFrom(d?: Date) {
@@ -181,14 +406,22 @@ function CalendarPage() {
   async function applyPresetToSelection(preset: ShiftPreset) {
     if (selectedDays.size === 0 || !user) return;
     const rows = Array.from(selectedDays).map((date) => ({
-      user_id: user.id, date,
-      start_time: preset.start, end_time: preset.end,
-      type: preset.id, category: preset.category,
-      title: null, location: null, notes: null,
+      user_id: user.id,
+      date,
+      start_time: preset.start,
+      end_time: preset.end,
+      type: preset.id,
+      category: preset.category,
+      title: null,
+      location: null,
+      notes: null,
     }));
     // Upsert: delete existing rows for those dates (same category) then insert
-    await supabase.from("shifts").delete()
-      .eq("user_id", user.id).eq("category", preset.category)
+    await supabase
+      .from("shifts")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("category", preset.category)
       .in("date", Array.from(selectedDays));
     const { error } = await supabase.from("shifts").insert(rows);
     if (error) return toast.error(error.message);
@@ -200,8 +433,11 @@ function CalendarPage() {
 
   async function deleteSelection() {
     if (selectedDays.size === 0 || !user) return;
-    const { error } = await supabase.from("shifts").delete()
-      .eq("user_id", user.id).eq("category", activeCat)
+    const { error } = await supabase
+      .from("shifts")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("category", activeCat)
       .in("date", Array.from(selectedDays));
     if (error) return toast.error(error.message);
     toast.success(`Cleared ${selectedDays.size} day${selectedDays.size > 1 ? "s" : ""}`);
@@ -210,7 +446,17 @@ function CalendarPage() {
   }
 
   const initials = (profile?.full_name ?? user?.email ?? "U")
-    .split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
+    .split(" ")
+    .map((p) => p[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  function updateShiftColor(id: string, bg: string) {
+    const next = { ...colorOverrides, [id]: { bg, ink: textColorFor(bg) } };
+    setColorOverrides(next);
+    window.localStorage.setItem("nurse-grid-shift-colors", JSON.stringify(next));
+  }
 
   return (
     <div className="-mx-4 -mt-6 flex flex-col h-[100dvh]">
@@ -230,17 +476,25 @@ function CalendarPage() {
           <button
             onClick={() => (multiMode ? cancelMulti() : enterMultiFrom())}
             className={`h-10 px-3 rounded-full flex items-center gap-1.5 text-sm font-medium transition-colors ${
-              multiMode ? "bg-primary text-primary-foreground" : "bg-muted/60 text-foreground hover:bg-muted"
+              multiMode
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted/60 text-foreground hover:bg-muted"
             }`}
             aria-label="Select multiple days"
           >
             <CheckSquare className="w-4 h-4" />
             <span className="hidden sm:inline">{multiMode ? "Done" : "Select days"}</span>
           </button>
-          <button onClick={() => setOpenShare(true)} className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-muted/60 text-foreground">
+          <button
+            onClick={() => setOpenShare(true)}
+            className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-muted/60 text-foreground"
+          >
             <Share2 className="w-5 h-5" />
           </button>
-          <button onClick={() => setSelected(new Date())} className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-muted/60 text-foreground">
+          <button
+            onClick={() => setSelected(new Date())}
+            className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-muted/60 text-foreground"
+          >
             <Plus className="w-5 h-5" />
           </button>
         </div>
@@ -256,7 +510,9 @@ function CalendarPage() {
                 key={c.id}
                 onClick={() => setActiveCat(c.id)}
                 className={`shrink-0 px-5 h-10 rounded-full text-sm font-medium transition-colors ${
-                  active ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
+                  active
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {c.label}
@@ -273,15 +529,12 @@ function CalendarPage() {
             key={format(m, "yyyy-MM")}
             month={m}
             shiftMap={shiftMap}
+            shiftLibrary={shiftLibrary}
+            libById={libById}
             onDayTap={onDayTap}
-            onDayLongPress={enterMultiFrom}
-            onDaySelectToggle={(d) => {
+            onSelectDay={(d) => {
               const k = format(d, "yyyy-MM-dd");
-              setSelectedDays((prev) => {
-                const next = new Set(prev);
-                next.has(k) ? next.delete(k) : next.add(k);
-                return next;
-              });
+              setSelectedDays((prev) => (prev.has(k) ? prev : new Set(prev).add(k)));
             }}
             selectedDays={selectedDays}
             multiMode={multiMode}
@@ -294,7 +547,10 @@ function CalendarPage() {
         <div className="fixed bottom-24 inset-x-0 z-50 px-4 pointer-events-none">
           <div className="app-shell !pb-0 !min-h-0">
             <div className="pointer-events-auto rounded-2xl bg-foreground text-background shadow-lg px-3 py-2.5 flex items-center gap-2">
-              <button onClick={cancelMulti} className="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center">
+              <button
+                onClick={cancelMulti}
+                className="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center"
+              >
                 <X className="w-4 h-4" />
               </button>
               <div className="flex-1 text-sm font-medium">
@@ -324,13 +580,18 @@ function CalendarPage() {
         open={pickerOpen}
         onOpenChange={setPickerOpen}
         onPick={applyPresetToSelection}
+        shiftLibrary={shiftLibrary}
+        onColorChange={updateShiftColor}
       />
 
       {/* Single-day dialog */}
       <ShiftDialog
         date={selected}
         category={activeCat}
-        existing={selected ? shiftMap.get(format(selected, "yyyy-MM-dd")) ?? null : null}
+        existing={selected ? (shiftMap.get(format(selected, "yyyy-MM-dd")) ?? null) : null}
+        shiftLibrary={shiftLibrary}
+        libById={libById}
+        onColorChange={updateShiftColor}
         onClose={() => setSelected(null)}
         onSaved={() => qc.invalidateQueries({ queryKey: ["shifts"] })}
         onAddToMore={(d) => enterMultiFrom(d)}
@@ -342,24 +603,40 @@ function CalendarPage() {
 }
 
 function MonthBlock({
-  month, shiftMap, onDayTap, onDayLongPress, onDaySelectToggle, selectedDays, multiMode,
+  month,
+  shiftMap,
+  shiftLibrary,
+  libById,
+  onDayTap,
+  onSelectDay,
+  selectedDays,
+  multiMode,
 }: {
-  month: Date; shiftMap: Map<string, Shift>;
-  onDayTap: (d: Date) => void; onDayLongPress: (d: Date) => void;
-  onDaySelectToggle: (d: Date) => void;
-  selectedDays: Set<string>; multiMode: boolean;
+  month: Date;
+  shiftMap: Map<string, Shift>;
+  shiftLibrary: ShiftPreset[];
+  libById: Map<string, ShiftPreset>;
+  onDayTap: (d: Date) => void;
+  onSelectDay: (d: Date) => void;
+  selectedDays: Set<string>;
+  multiMode: boolean;
 }) {
   const days = eachDayOfInterval({
     start: startOfWeek(startOfMonth(month), { weekStartsOn: 0 }),
     end: endOfWeek(endOfMonth(month), { weekStartsOn: 0 }),
   });
-  const pressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const longPressedRef = useRef(false);
+  const daysByKey = useMemo(
+    () => new Map(days.map((day) => [format(day, "yyyy-MM-dd"), day])),
+    [days],
+  );
   const draggingRef = useRef(false);
   const lastToggledRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const up = () => { draggingRef.current = false; lastToggledRef.current = null; };
+    const up = () => {
+      draggingRef.current = false;
+      lastToggledRef.current = null;
+    };
     window.addEventListener("pointerup", up);
     window.addEventListener("pointercancel", up);
     return () => {
@@ -373,19 +650,32 @@ function MonthBlock({
       <div className="px-3 flex items-center justify-between mb-3">
         <h2 className="font-serif text-xl md:text-3xl">{format(month, "MMMM yyyy")}</h2>
         <div className="flex items-center gap-1 text-muted-foreground">
-          <button className="w-8 h-8 rounded-lg hover:bg-muted/60 flex items-center justify-center"><List className="w-4 h-4" /></button>
-          <button className="w-8 h-8 rounded-lg hover:bg-muted/60 flex items-center justify-center"><Settings className="w-4 h-4" /></button>
-          <button className="w-8 h-8 rounded-lg hover:bg-muted/60 flex items-center justify-center"><Bell className="w-4 h-4" /></button>
+          <button className="w-8 h-8 rounded-lg hover:bg-muted/60 flex items-center justify-center">
+            <List className="w-4 h-4" />
+          </button>
+          <button className="w-8 h-8 rounded-lg hover:bg-muted/60 flex items-center justify-center">
+            <Settings className="w-4 h-4" />
+          </button>
+          <button className="w-8 h-8 rounded-lg hover:bg-muted/60 flex items-center justify-center">
+            <Bell className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
       <div className="grid grid-cols-7 px-2 mb-1">
-        {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((d, i) => (
-          <div key={i} className="text-center text-[11px] md:text-xs text-muted-foreground font-medium py-1 uppercase tracking-wider">
-            <span className="md:hidden">{d.slice(0, d === "Thursday" ? 2 : d === "Tuesday" ? 2 : d === "Saturday" ? 2 : 1)}</span>
-            <span className="hidden md:inline">{d}</span>
-          </div>
-        ))}
+        {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map(
+          (d, i) => (
+            <div
+              key={i}
+              className="text-center text-[11px] md:text-xs text-muted-foreground font-medium py-1 uppercase tracking-wider"
+            >
+              <span className="md:hidden">
+                {d.slice(0, d === "Thursday" ? 2 : d === "Tuesday" ? 2 : d === "Saturday" ? 2 : 1)}
+              </span>
+              <span className="hidden md:inline">{d}</span>
+            </div>
+          ),
+        )}
       </div>
 
       <div className="grid grid-cols-7 px-2 gap-px bg-border/40">
@@ -394,46 +684,44 @@ function MonthBlock({
           const s = shiftMap.get(key);
           const inMonth = isSameMonth(d, month);
           const isToday = isSameDay(d, new Date());
-          const preset = s ? presetFor(s) : null;
+          const preset = s ? presetFor(s, shiftLibrary, libById) : null;
           const isSelected = selectedDays.has(key);
 
-          const startPress = (e: React.PointerEvent) => {
-            longPressedRef.current = false;
-            if (multiMode) {
-              // start drag selection
-              draggingRef.current = true;
-              lastToggledRef.current = key;
-              onDaySelectToggle(d);
-              return;
-            }
-            if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
-            pressTimerRef.current = setTimeout(() => {
-              longPressedRef.current = true;
-              draggingRef.current = true;
-              lastToggledRef.current = key;
-              onDayLongPress(d);
-              pressTimerRef.current = null;
-            }, 350);
+          const selectDraggedDay = (clientX: number, clientY: number) => {
+            const target = document
+              .elementFromPoint(clientX, clientY)
+              ?.closest<HTMLButtonElement>("[data-calendar-day]");
+            const nextKey = target?.dataset.dayKey;
+            if (!nextKey || lastToggledRef.current === nextKey) return;
+            const nextDate = daysByKey.get(nextKey);
+            if (!nextDate) return;
+            lastToggledRef.current = nextKey;
+            onSelectDay(nextDate);
+          };
+          const startPress = (e: React.PointerEvent<HTMLButtonElement>) => {
+            e.currentTarget.setPointerCapture(e.pointerId);
+            draggingRef.current = true;
+            lastToggledRef.current = key;
+            onDayTap(d);
           };
           const cancelPress = () => {
-            if (pressTimerRef.current) { clearTimeout(pressTimerRef.current); pressTimerRef.current = null; }
+            draggingRef.current = false;
+            lastToggledRef.current = null;
           };
           const onEnter = () => {
             if (!draggingRef.current) return;
             if (lastToggledRef.current === key) return;
             lastToggledRef.current = key;
-            onDaySelectToggle(d);
-          };
-          const onClick = (e: React.MouseEvent) => {
-            if (longPressedRef.current) { e.preventDefault(); longPressedRef.current = false; return; }
-            onDayTap(d);
+            onSelectDay(d);
           };
 
           return (
             <button
               key={key}
-              onClick={onClick}
+              data-calendar-day="true"
+              data-day-key={key}
               onPointerDown={startPress}
+              onPointerMove={(e) => draggingRef.current && selectDraggedDay(e.clientX, e.clientY)}
               onPointerEnter={onEnter}
               onPointerUp={cancelPress}
               onPointerLeave={cancelPress}
@@ -447,11 +735,17 @@ function MonthBlock({
                   className="absolute inset-0 flex flex-col items-center justify-center"
                   style={{ backgroundColor: preset.bg, color: preset.ink }}
                 >
-                  <span className="text-base md:text-xl font-semibold leading-none">{format(d, "d")}</span>
-                  <span className="text-[10px] md:text-xs font-bold mt-1 tracking-wide opacity-95">{preset.code}</span>
+                  <span className="text-base md:text-xl font-semibold leading-none">
+                    {format(d, "d")}
+                  </span>
+                  <span className="text-[10px] md:text-xs font-bold mt-1 tracking-wide opacity-95">
+                    {preset.code}
+                  </span>
                 </div>
               ) : (
-                <span className={`text-base md:text-xl ${isToday ? "font-bold text-primary" : "text-foreground/90"}`}>
+                <span
+                  className={`text-base md:text-xl ${isToday ? "font-bold text-primary" : "text-foreground/90"}`}
+                >
                   {format(d, "d")}
                 </span>
               )}
@@ -464,16 +758,28 @@ function MonthBlock({
 }
 
 function ShiftPickerSheet({
-  open, onOpenChange, onPick,
+  open,
+  onOpenChange,
+  onPick,
+  shiftLibrary,
+  onColorChange,
 }: {
-  open: boolean; onOpenChange: (o: boolean) => void;
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
   onPick: (p: ShiftPreset) => void;
+  shiftLibrary: ShiftPreset[];
+  onColorChange: (id: string, bg: string) => void;
 }) {
   const byCat = useMemo(() => {
-    const m: Record<Category, ShiftPreset[]> = { work: [], vacation: [], event: [], appointment: [] };
-    for (const p of SHIFT_LIBRARY) m[p.category].push(p);
+    const m: Record<Category, ShiftPreset[]> = {
+      work: [],
+      vacation: [],
+      event: [],
+      appointment: [],
+    };
+    for (const p of shiftLibrary) m[p.category].push(p);
     return m;
-  }, []);
+  }, [shiftLibrary]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -485,18 +791,28 @@ function ShiftPickerSheet({
         <div className="space-y-5 mt-4 pb-6">
           {CATEGORIES.map((c) => (
             <div key={c.id}>
-              <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2 px-1">{c.label}</div>
+              <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2 px-1">
+                {c.label}
+              </div>
               <div className="grid grid-cols-3 gap-2">
                 {byCat[c.id].map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => onPick(p)}
-                    className="rounded-2xl p-3 flex flex-col items-center justify-center min-h-[78px] text-center transition-transform active:scale-95 shadow-sm"
-                    style={{ backgroundColor: p.bg, color: p.ink }}
-                  >
-                    <span className="font-bold text-lg leading-none">{p.code}</span>
-                    <span className="text-[10px] mt-1.5 opacity-90 leading-tight">{p.label}</span>
-                  </button>
+                  <div key={p.id} className="relative">
+                    <button
+                      onClick={() => onPick(p)}
+                      className="w-full rounded-2xl p-3 flex flex-col items-center justify-center min-h-[78px] text-center transition-transform active:scale-95 shadow-sm"
+                      style={{ backgroundColor: p.bg, color: p.ink }}
+                    >
+                      <span className="font-bold text-lg leading-none">{p.code}</span>
+                      <span className="text-[10px] mt-1.5 opacity-90 leading-tight">{p.label}</span>
+                    </button>
+                    <input
+                      aria-label={`${p.label} color`}
+                      type="color"
+                      value={p.bg}
+                      onChange={(e) => onColorChange(p.id, e.target.value)}
+                      className="absolute right-1 top-1 h-6 w-6 rounded-full border border-background bg-transparent p-0"
+                    />
+                  </div>
                 ))}
               </div>
             </div>
@@ -508,10 +824,24 @@ function ShiftPickerSheet({
 }
 
 function ShiftDialog({
-  date, category, existing, onClose, onSaved, onAddToMore,
+  date,
+  category,
+  existing,
+  shiftLibrary,
+  libById,
+  onColorChange,
+  onClose,
+  onSaved,
+  onAddToMore,
 }: {
-  date: Date | null; category: Category; existing: Shift | null;
-  onClose: () => void; onSaved: () => void;
+  date: Date | null;
+  category: Category;
+  existing: Shift | null;
+  shiftLibrary: ShiftPreset[];
+  libById: Map<string, ShiftPreset>;
+  onColorChange: (id: string, bg: string) => void;
+  onClose: () => void;
+  onSaved: () => void;
   onAddToMore: (d: Date) => void;
 }) {
   const { user } = useAuth();
@@ -523,20 +853,23 @@ function ShiftDialog({
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const catPresets = useMemo(() => SHIFT_LIBRARY.filter((p) => p.category === category), [category]);
+  const catPresets = useMemo(
+    () => shiftLibrary.filter((p) => p.category === category),
+    [category, shiftLibrary],
+  );
 
   useEffect(() => {
     if (!date) return;
     const ex = existing;
     const fallback = catPresets[0];
-    const initialPreset = ex && LIB_BY_ID.has(ex.type) ? ex.type : fallback?.id ?? "";
+    const initialPreset = ex && libById.has(ex.type) ? ex.type : (fallback?.id ?? "");
     setPresetId(initialPreset);
     setStart(ex?.start_time?.slice(0, 5) ?? fallback?.start ?? "09:00");
     setEnd(ex?.end_time?.slice(0, 5) ?? fallback?.end ?? "10:00");
     setTitle(ex?.title ?? "");
     setLocation(ex?.location ?? "");
     setNotes(ex?.notes ?? "");
-  }, [date, existing, category, catPresets]);
+  }, [date, existing, category, catPresets, libById]);
 
   function applyPreset(p: ShiftPreset) {
     setPresetId(p.id);
@@ -547,11 +880,12 @@ function ShiftDialog({
   async function save() {
     if (!date) return;
     setSaving(true);
-    const preset = LIB_BY_ID.get(presetId);
+    const preset = libById.get(presetId);
     const payload = {
       user_id: user!.id,
       date: format(date, "yyyy-MM-dd"),
-      start_time: start, end_time: end,
+      start_time: start,
+      end_time: end,
       type: presetId || (preset?.id ?? category),
       category,
       title: title || null,
@@ -601,7 +935,12 @@ function ShiftDialog({
               <Label>Shift</Label>
               <button
                 type="button"
-                onClick={() => { if (date) { onClose(); setTimeout(() => onAddToMore(date), 50); } }}
+                onClick={() => {
+                  if (date) {
+                    onClose();
+                    setTimeout(() => onAddToMore(date), 50);
+                  }
+                }}
                 className="text-[11px] text-primary font-medium"
               >
                 + Add to more days
@@ -611,16 +950,26 @@ function ShiftDialog({
               {catPresets.map((p) => {
                 const active = presetId === p.id;
                 return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => applyPreset(p)}
-                    className={`rounded-xl py-2 flex flex-col items-center transition-all ${active ? "ring-2 ring-foreground ring-offset-1 ring-offset-background scale-[1.02]" : ""}`}
-                    style={{ backgroundColor: p.bg, color: p.ink }}
-                  >
-                    <span className="font-bold text-sm leading-none">{p.code}</span>
-                    <span className="text-[9px] mt-1 opacity-90 leading-tight px-1 text-center">{p.label.split(" ")[0]}</span>
-                  </button>
+                  <div key={p.id}>
+                    <button
+                      type="button"
+                      onClick={() => applyPreset(p)}
+                      className={`w-full rounded-xl py-2 flex flex-col items-center transition-all ${active ? "ring-2 ring-foreground ring-offset-1 ring-offset-background scale-[1.02]" : ""}`}
+                      style={{ backgroundColor: p.bg, color: p.ink }}
+                    >
+                      <span className="font-bold text-sm leading-none">{p.code}</span>
+                      <span className="text-[9px] mt-1 opacity-90 leading-tight px-1 text-center">
+                        {p.label.split(" ")[0]}
+                      </span>
+                    </button>
+                    <input
+                      aria-label={`${p.label} color`}
+                      type="color"
+                      value={p.bg}
+                      onChange={(e) => onColorChange(p.id, e.target.value)}
+                      className="mt-1 h-6 w-full rounded-lg bg-transparent p-0"
+                    />
+                  </div>
                 );
               })}
             </div>
@@ -629,29 +978,57 @@ function ShiftDialog({
           {category !== "work" && (
             <div>
               <Label>Title</Label>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={category === "vacation" ? "Trip name…" : "Title"} className="mt-1.5 h-11 rounded-xl" />
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder={category === "vacation" ? "Trip name…" : "Title"}
+                className="mt-1.5 h-11 rounded-xl"
+              />
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Start</Label>
-              <Input type="time" value={start} onChange={(e) => setStart(e.target.value)} className="mt-1.5 h-11 rounded-xl" />
+              <Input
+                type="time"
+                value={start}
+                onChange={(e) => setStart(e.target.value)}
+                className="mt-1.5 h-11 rounded-xl"
+              />
             </div>
             <div>
               <Label>End</Label>
-              <Input type="time" value={end} onChange={(e) => setEnd(e.target.value)} className="mt-1.5 h-11 rounded-xl" />
+              <Input
+                type="time"
+                value={end}
+                onChange={(e) => setEnd(e.target.value)}
+                className="mt-1.5 h-11 rounded-xl"
+              />
             </div>
           </div>
 
           <div>
-            <Label className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />Location</Label>
-            <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Worksite, address…" className="mt-1.5 h-11 rounded-xl" />
+            <Label className="flex items-center gap-1">
+              <MapPin className="w-3.5 h-3.5" />
+              Location
+            </Label>
+            <Input
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Worksite, address…"
+              className="mt-1.5 h-11 rounded-xl"
+            />
           </div>
 
           <div>
             <Label>Notes</Label>
-            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="mt-1.5 rounded-xl" rows={2} />
+            <Textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="mt-1.5 rounded-xl"
+              rows={2}
+            />
           </div>
 
           <div className="flex gap-2 pt-1">
@@ -670,7 +1047,13 @@ function ShiftDialog({
   );
 }
 
-function ShareDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
+function ShareDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+}) {
   const [scope, setScope] = useState<"year" | "month" | "range">("month");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -683,7 +1066,9 @@ function ShareDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: 
           <div>
             <Label>What to share</Label>
             <Select value={scope} onValueChange={(v) => setScope(v as typeof scope)}>
-              <SelectTrigger className="mt-1.5 h-11 rounded-xl"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="mt-1.5 h-11 rounded-xl">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="year">Entire year</SelectItem>
                 <SelectItem value="month">Current month</SelectItem>
