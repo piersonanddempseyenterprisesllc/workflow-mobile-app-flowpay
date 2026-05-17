@@ -219,32 +219,41 @@ export type Database = {
       }
       shifts: {
         Row: {
+          category: string
           created_at: string
           date: string
           end_time: string
           id: string
+          location: string | null
           notes: string | null
           start_time: string
+          title: string | null
           type: string
           user_id: string
         }
         Insert: {
+          category?: string
           created_at?: string
           date: string
           end_time: string
           id?: string
+          location?: string | null
           notes?: string | null
           start_time: string
+          title?: string | null
           type?: string
           user_id: string
         }
         Update: {
+          category?: string
           created_at?: string
           date?: string
           end_time?: string
           id?: string
+          location?: string | null
           notes?: string | null
           start_time?: string
+          title?: string | null
           type?: string
           user_id?: string
         }
