@@ -634,23 +634,24 @@ function ShiftDialog({
               {catPresets.map((p) => {
                 const active = presetId === p.id;
                 return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => applyPreset(p)}
-                    className={`rounded-xl py-2 flex flex-col items-center transition-all ${active ? "ring-2 ring-foreground ring-offset-1 ring-offset-background scale-[1.02]" : ""}`}
-                    style={{ backgroundColor: p.bg, color: p.ink }}
-                  >
-                    <span className="font-bold text-sm leading-none">{p.code}</span>
-                    <span className="text-[9px] mt-1 opacity-90 leading-tight px-1 text-center">{p.label.split(" ")[0]}</span>
-                  </button>
-                  <input
-                    aria-label={`${p.label} color`}
-                    type="color"
-                    value={p.bg}
-                    onChange={(e) => onColorChange(p.id, e.target.value)}
-                    className="mt-1 h-6 w-full rounded-lg bg-transparent p-0"
-                  />
+                  <div key={p.id}>
+                    <button
+                      type="button"
+                      onClick={() => applyPreset(p)}
+                      className={`w-full rounded-xl py-2 flex flex-col items-center transition-all ${active ? "ring-2 ring-foreground ring-offset-1 ring-offset-background scale-[1.02]" : ""}`}
+                      style={{ backgroundColor: p.bg, color: p.ink }}
+                    >
+                      <span className="font-bold text-sm leading-none">{p.code}</span>
+                      <span className="text-[9px] mt-1 opacity-90 leading-tight px-1 text-center">{p.label.split(" ")[0]}</span>
+                    </button>
+                    <input
+                      aria-label={`${p.label} color`}
+                      type="color"
+                      value={p.bg}
+                      onChange={(e) => onColorChange(p.id, e.target.value)}
+                      className="mt-1 h-6 w-full rounded-lg bg-transparent p-0"
+                    />
+                  </div>
                 );
               })}
             </div>
