@@ -530,9 +530,10 @@ function ShiftPickerSheet({
 }
 
 function ShiftDialog({
-  date, category, existing, onClose, onSaved, onAddToMore,
+  date, category, existing, shiftLibrary, libById, onColorChange, onClose, onSaved, onAddToMore,
 }: {
   date: Date | null; category: Category; existing: Shift | null;
+  shiftLibrary: ShiftPreset[]; libById: Map<string, ShiftPreset>; onColorChange: (id: string, bg: string) => void;
   onClose: () => void; onSaved: () => void;
   onAddToMore: (d: Date) => void;
 }) {
@@ -545,20 +546,20 @@ function ShiftDialog({
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const catPresets = useMemo(() => SHIFT_LIBRARY.filter((p) => p.category === category), [category]);
+  const catPresets = useMemo(() => shiftLibrary.filter((p) => p.category === category), [category, shiftLibrary]);
 
   useEffect(() => {
     if (!date) return;
     const ex = existing;
     const fallback = catPresets[0];
-    const initialPreset = ex && LIB_BY_ID.has(ex.type) ? ex.type : fallback?.id ?? "";
+    const initialPreset = ex && libById.has(ex.type) ? ex.type : fallback?.id ?? "";
     setPresetId(initialPreset);
     setStart(ex?.start_time?.slice(0, 5) ?? fallback?.start ?? "09:00");
     setEnd(ex?.end_time?.slice(0, 5) ?? fallback?.end ?? "10:00");
     setTitle(ex?.title ?? "");
     setLocation(ex?.location ?? "");
     setNotes(ex?.notes ?? "");
-  }, [date, existing, category, catPresets]);
+  }, [date, existing, category, catPresets, libById]);
 
   function applyPreset(p: ShiftPreset) {
     setPresetId(p.id);
@@ -569,7 +570,7 @@ function ShiftDialog({
   async function save() {
     if (!date) return;
     setSaving(true);
-    const preset = LIB_BY_ID.get(presetId);
+    const preset = libById.get(presetId);
     const payload = {
       user_id: user!.id,
       date: format(date, "yyyy-MM-dd"),
@@ -643,6 +644,13 @@ function ShiftDialog({
                     <span className="font-bold text-sm leading-none">{p.code}</span>
                     <span className="text-[9px] mt-1 opacity-90 leading-tight px-1 text-center">{p.label.split(" ")[0]}</span>
                   </button>
+                  <input
+                    aria-label={`${p.label} color`}
+                    type="color"
+                    value={p.bg}
+                    onChange={(e) => onColorChange(p.id, e.target.value)}
+                    className="mt-1 h-6 w-full rounded-lg bg-transparent p-0"
+                  />
                 );
               })}
             </div>
