@@ -562,9 +562,35 @@ function CalendarPage() {
     .toUpperCase();
 
   function updateShiftColor(id: string, bg: string) {
-    const next = { ...colorOverrides, [id]: { bg, ink: textColorFor(bg) } };
+    const existing = colorOverrides[id];
+    const next = { ...colorOverrides, [id]: { bg, ink: textColorFor(bg), icon: existing?.icon } };
     setColorOverrides(next);
     window.localStorage.setItem("nurse-grid-shift-colors", JSON.stringify(next));
+  }
+
+  function updateShiftIcon(id: string, icon: string) {
+    const existing = colorOverrides[id];
+    const preset = DEFAULT_SHIFT_LIBRARY.find((p) => p.id === id);
+    const fallbackBg = activeTheme.colors[id] ?? preset?.bg ?? "#cccccc";
+    const next = {
+      ...colorOverrides,
+      [id]: {
+        bg: existing?.bg ?? fallbackBg,
+        ink: existing?.ink ?? textColorFor(fallbackBg),
+        icon,
+      },
+    };
+    setColorOverrides(next);
+    window.localStorage.setItem("nurse-grid-shift-colors", JSON.stringify(next));
+  }
+
+  function applyTheme(id: string) {
+    setThemeId(id);
+    window.localStorage.setItem("nurse-grid-theme", id);
+    // Clear per-shift colour overrides so theme palette takes effect cleanly
+    setColorOverrides({});
+    window.localStorage.removeItem("nurse-grid-shift-colors");
+    toast.success(`Theme: ${THEMES.find((t) => t.id === id)?.name}`);
   }
 
   return (
