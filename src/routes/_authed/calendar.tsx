@@ -275,6 +275,14 @@ function CalendarPage() {
             shiftMap={shiftMap}
             onDayTap={onDayTap}
             onDayLongPress={enterMultiFrom}
+            onDaySelectToggle={(d) => {
+              const k = format(d, "yyyy-MM-dd");
+              setSelectedDays((prev) => {
+                const next = new Set(prev);
+                next.has(k) ? next.delete(k) : next.add(k);
+                return next;
+              });
+            }}
             selectedDays={selectedDays}
             multiMode={multiMode}
           />
