@@ -1082,7 +1082,7 @@ function ShiftPickerSheet({
                 {byCat[c.id].map((p) => {
                   const Ico = p.icon ? ICON_LIBRARY[p.icon] : null;
                   return (
-                    <div key={p.id} className="relative">
+                    <div key={p.id} className="relative flex flex-col gap-1.5">
                       <button
                         onClick={() => onPick(p)}
                         className="w-full rounded-2xl p-3 flex flex-col items-center justify-center min-h-[88px] text-center transition-transform active:scale-95 shadow-sm"
@@ -1097,6 +1097,27 @@ function ShiftPickerSheet({
                           {p.label}
                         </span>
                       </button>
+                      {/* Quick color bubbles */}
+                      <div className="flex items-center justify-center gap-1 px-1">
+                        {COLOR_SWATCHES.slice(0, 6).map((hex) => {
+                          const active = p.bg.toLowerCase() === hex.toLowerCase();
+                          return (
+                            <button
+                              key={hex}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onColorChange(p.id, hex);
+                              }}
+                              aria-label={`Set ${p.label} color to ${hex}`}
+                              className={`w-4 h-4 rounded-full transition-transform hover:scale-125 ${
+                                active ? "ring-2 ring-foreground ring-offset-1 ring-offset-background" : "ring-1 ring-border"
+                              }`}
+                              style={{ backgroundColor: hex }}
+                            />
+                          );
+                        })}
+                      </div>
                       <CustomizePopover
                         preset={p}
                         onColorChange={onColorChange}
