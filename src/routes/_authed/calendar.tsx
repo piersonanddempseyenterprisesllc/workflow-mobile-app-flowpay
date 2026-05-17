@@ -5,14 +5,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import {
   format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay,
-  startOfWeek, endOfWeek, addMonths, isSameMonth, parseISO,
+  startOfWeek, endOfWeek, addMonths, isSameMonth,
 } from "date-fns";
 import {
-  Plus, Sun, Moon, Sunset, Phone, Palmtree, PartyPopper, Stethoscope,
-  List, Settings, Bell, Trash2, MapPin, Share2,
+  Plus, List, Settings, Bell, Trash2, MapPin, Share2, CheckSquare, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,26 +36,48 @@ const CATEGORIES: { id: Category; label: string }[] = [
   { id: "appointment", label: "Appointments" },
 ];
 
-const WORK_TYPES = ["Day", "Night", "Evening", "On-call", "Off"] as const;
-
-const TYPE_META: Record<string, { Icon: typeof Sun; tint: string; ink: string }> = {
-  Day:       { Icon: Sun,        tint: "bg-day-shift/85",     ink: "text-foreground" },
-  Night:     { Icon: Moon,       tint: "bg-night-shift",      ink: "text-white" },
-  Evening:   { Icon: Sunset,     tint: "bg-evening-shift/90", ink: "text-white" },
-  "On-call": { Icon: Phone,      tint: "bg-oncall-shift",     ink: "text-white" },
-  Off:       { Icon: Palmtree,   tint: "bg-off-shift/30",     ink: "text-foreground" },
+// NurseGrid-style shift library: code + colour + default times.
+type ShiftPreset = {
+  id: string; code: string; label: string;
+  start: string; end: string; bg: string; ink: string;
+  category: Category;
 };
 
-const CAT_META: Record<Category, { Icon: typeof Sun; tint: string; ink: string; label: string }> = {
-  work:        { Icon: Sun,         tint: "bg-day-shift/85",  ink: "text-foreground", label: "Work" },
-  vacation:    { Icon: Palmtree,    tint: "bg-off-shift/40",  ink: "text-foreground", label: "Vacation" },
-  event:       { Icon: PartyPopper, tint: "bg-evening-shift", ink: "text-white",      label: "Event" },
-  appointment: { Icon: Stethoscope, tint: "bg-oncall-shift",  ink: "text-white",      label: "Appointment" },
-};
+const SHIFT_LIBRARY: ShiftPreset[] = [
+  // Work
+  { id: "D7",  code: "D",   label: "Day 7a–7p",     start: "07:00", end: "19:00", bg: "#F4C76A", ink: "#3a2a05", category: "work" },
+  { id: "D8",  code: "D8",  label: "Day 7a–3p",     start: "07:00", end: "15:00", bg: "#F8DE9B", ink: "#3a2a05", category: "work" },
+  { id: "E8",  code: "E",   label: "Evening 3p–11p", start: "15:00", end: "23:00", bg: "#E97A5A", ink: "#fff",    category: "work" },
+  { id: "N7",  code: "N",   label: "Night 7p–7a",   start: "19:00", end: "07:00", bg: "#34406B", ink: "#fff",    category: "work" },
+  { id: "N8",  code: "N8",  label: "Night 11p–7a",  start: "23:00", end: "07:00", bg: "#1F2647", ink: "#fff",    category: "work" },
+  { id: "OC",  code: "OC",  label: "On-call",       start: "08:00", end: "20:00", bg: "#9F6BC4", ink: "#fff",    category: "work" },
+  { id: "OFF", code: "OFF", label: "Off",           start: "00:00", end: "00:00", bg: "#D7DBD3", ink: "#384a3a", category: "work" },
+  { id: "OT",  code: "OT",  label: "Overtime",      start: "07:00", end: "23:00", bg: "#C44A6C", ink: "#fff",    category: "work" },
+  // Vacation
+  { id: "PTO", code: "PTO", label: "Paid time off", start: "00:00", end: "00:00", bg: "#7BB5A4", ink: "#fff",    category: "vacation" },
+  { id: "VAC", code: "VAC", label: "Vacation",      start: "00:00", end: "00:00", bg: "#5BA3C7", ink: "#fff",    category: "vacation" },
+  { id: "SICK",code: "S",   label: "Sick",          start: "00:00", end: "00:00", bg: "#B5C28F", ink: "#2c361f", category: "vacation" },
+  { id: "HOL", code: "H",   label: "Holiday",       start: "00:00", end: "00:00", bg: "#E8A87C", ink: "#3b1f10", category: "vacation" },
+  // Events
+  { id: "EVT", code: "EVT", label: "Event",         start: "18:00", end: "21:00", bg: "#D67BA8", ink: "#fff",    category: "event" },
+  { id: "BDAY",code: "BD",  label: "Birthday",      start: "00:00", end: "00:00", bg: "#E8C547", ink: "#3a2a05", category: "event" },
+  { id: "MTG", code: "M",   label: "Meeting",       start: "10:00", end: "11:00", bg: "#8E9DCC", ink: "#fff",    category: "event" },
+  // Appointments
+  { id: "DR",  code: "DR",  label: "Doctor",        start: "09:00", end: "10:00", bg: "#6FB1A8", ink: "#fff",    category: "appointment" },
+  { id: "DENT",code: "DT",  label: "Dentist",       start: "09:00", end: "10:00", bg: "#A8C5E6", ink: "#1a2e4a", category: "appointment" },
+  { id: "APPT",code: "APT", label: "Appointment",   start: "09:00", end: "10:00", bg: "#B89BC9", ink: "#fff",    category: "appointment" },
+];
 
-function metaFor(s: Shift) {
-  if (s.category === "work") return TYPE_META[s.type] ?? CAT_META.work;
-  return CAT_META[s.category as Category] ?? CAT_META.work;
+const LIB_BY_ID = new Map(SHIFT_LIBRARY.map((p) => [p.id, p]));
+
+function presetFor(s: Shift): ShiftPreset | null {
+  // type column stores either preset id (new) or legacy label
+  if (LIB_BY_ID.has(s.type)) return LIB_BY_ID.get(s.type)!;
+  // Legacy fallback by label match within library
+  const legacy = SHIFT_LIBRARY.find((p) => p.label.startsWith(s.type) || p.code === s.type);
+  if (legacy) return legacy;
+  // Category fallback
+  return SHIFT_LIBRARY.find((p) => p.category === (s.category as Category)) ?? null;
 }
 
 function shiftHours(start: string, end: string): number {
@@ -73,7 +95,11 @@ function CalendarPage() {
   const [selected, setSelected] = useState<Date | null>(null);
   const [openShare, setOpenShare] = useState(false);
 
-  // Continuous-scroll: render a window of months
+  // Multi-select
+  const [multiMode, setMultiMode] = useState(false);
+  const [selectedDays, setSelectedDays] = useState<Set<string>>(new Set());
+  const [pickerOpen, setPickerOpen] = useState(false);
+
   const today = new Date();
   const [monthsBack, setMonthsBack] = useState(2);
   const [monthsForward, setMonthsForward] = useState(6);
@@ -116,22 +142,71 @@ function CalendarPage() {
     return m;
   }, [shifts]);
 
-  // Lazy-load more months when scrolling near edges
   function onScroll() {
     const el = scrollerRef.current;
     if (!el) return;
-    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 400) {
-      setMonthsForward((n) => n + 3);
-    }
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 400) setMonthsForward((n) => n + 3);
     if (el.scrollTop < 200) {
       const prev = el.scrollHeight;
       setMonthsBack((n) => n + 2);
       requestAnimationFrame(() => {
-        if (scrollerRef.current) {
-          scrollerRef.current.scrollTop += scrollerRef.current.scrollHeight - prev;
-        }
+        if (scrollerRef.current) scrollerRef.current.scrollTop += scrollerRef.current.scrollHeight - prev;
       });
     }
+  }
+
+  function onDayTap(d: Date) {
+    const key = format(d, "yyyy-MM-dd");
+    if (multiMode) {
+      const next = new Set(selectedDays);
+      next.has(key) ? next.delete(key) : next.add(key);
+      setSelectedDays(next);
+    } else {
+      setSelected(d);
+    }
+  }
+
+  function enterMultiFrom(d?: Date) {
+    setMultiMode(true);
+    setSelected(null);
+    if (d) setSelectedDays(new Set([format(d, "yyyy-MM-dd")]));
+  }
+
+  function cancelMulti() {
+    setMultiMode(false);
+    setSelectedDays(new Set());
+    setPickerOpen(false);
+  }
+
+  async function applyPresetToSelection(preset: ShiftPreset) {
+    if (selectedDays.size === 0 || !user) return;
+    const rows = Array.from(selectedDays).map((date) => ({
+      user_id: user.id, date,
+      start_time: preset.start, end_time: preset.end,
+      type: preset.id, category: preset.category,
+      title: null, location: null, notes: null,
+    }));
+    // Upsert: delete existing rows for those dates (same category) then insert
+    await supabase.from("shifts").delete()
+      .eq("user_id", user.id).eq("category", preset.category)
+      .in("date", Array.from(selectedDays));
+    const { error } = await supabase.from("shifts").insert(rows);
+    if (error) return toast.error(error.message);
+    toast.success(`${preset.code} added to ${rows.length} day${rows.length > 1 ? "s" : ""}`);
+    cancelMulti();
+    if (preset.category !== activeCat) setActiveCat(preset.category);
+    qc.invalidateQueries({ queryKey: ["shifts"] });
+  }
+
+  async function deleteSelection() {
+    if (selectedDays.size === 0 || !user) return;
+    const { error } = await supabase.from("shifts").delete()
+      .eq("user_id", user.id).eq("category", activeCat)
+      .in("date", Array.from(selectedDays));
+    if (error) return toast.error(error.message);
+    toast.success(`Cleared ${selectedDays.size} day${selectedDays.size > 1 ? "s" : ""}`);
+    cancelMulti();
+    qc.invalidateQueries({ queryKey: ["shifts"] });
   }
 
   const initials = (profile?.full_name ?? user?.email ?? "U")
@@ -152,6 +227,13 @@ function CalendarPage() {
           <h1 className="font-serif text-2xl">Calendar</h1>
         </div>
         <div className="flex items-center gap-1">
+          <button
+            onClick={() => (multiMode ? cancelMulti() : enterMultiFrom())}
+            className={`w-10 h-10 rounded-full flex items-center justify-center hover:bg-muted/60 ${multiMode ? "text-primary" : "text-foreground"}`}
+            aria-label="Multi-select"
+          >
+            <CheckSquare className="w-5 h-5" />
+          </button>
           <button onClick={() => setOpenShare(true)} className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-muted/60 text-foreground">
             <Share2 className="w-5 h-5" />
           </button>
@@ -188,18 +270,58 @@ function CalendarPage() {
             key={format(m, "yyyy-MM")}
             month={m}
             shiftMap={shiftMap}
-            onDayTap={setSelected}
+            onDayTap={onDayTap}
+            selectedDays={selectedDays}
+            multiMode={multiMode}
           />
         ))}
       </div>
 
-      {/* Day detail / edit dialog */}
+      {/* Multi-select action bar */}
+      {multiMode && (
+        <div className="fixed bottom-24 inset-x-0 z-50 px-4 pointer-events-none">
+          <div className="app-shell !pb-0 !min-h-0">
+            <div className="pointer-events-auto rounded-2xl bg-foreground text-background shadow-lg px-3 py-2.5 flex items-center gap-2">
+              <button onClick={cancelMulti} className="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center">
+                <X className="w-4 h-4" />
+              </button>
+              <div className="flex-1 text-sm font-medium">
+                {selectedDays.size} day{selectedDays.size === 1 ? "" : "s"} selected
+              </div>
+              <button
+                onClick={deleteSelection}
+                disabled={selectedDays.size === 0}
+                className="px-3 h-9 rounded-full text-xs font-medium hover:bg-white/10 disabled:opacity-40"
+              >
+                Clear
+              </button>
+              <button
+                onClick={() => setPickerOpen(true)}
+                disabled={selectedDays.size === 0}
+                className="px-4 h-9 rounded-full bg-background text-foreground text-xs font-semibold disabled:opacity-40"
+              >
+                Add shift
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Shift picker sheet */}
+      <ShiftPickerSheet
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        onPick={applyPresetToSelection}
+      />
+
+      {/* Single-day dialog */}
       <ShiftDialog
         date={selected}
         category={activeCat}
         existing={selected ? shiftMap.get(format(selected, "yyyy-MM-dd")) ?? null : null}
         onClose={() => setSelected(null)}
         onSaved={() => qc.invalidateQueries({ queryKey: ["shifts"] })}
+        onAddToMore={(d) => enterMultiFrom(d)}
       />
 
       <ShareDialog open={openShare} onOpenChange={setOpenShare} />
@@ -208,8 +330,11 @@ function CalendarPage() {
 }
 
 function MonthBlock({
-  month, shiftMap, onDayTap,
-}: { month: Date; shiftMap: Map<string, Shift>; onDayTap: (d: Date) => void }) {
+  month, shiftMap, onDayTap, selectedDays, multiMode,
+}: {
+  month: Date; shiftMap: Map<string, Shift>;
+  onDayTap: (d: Date) => void; selectedDays: Set<string>; multiMode: boolean;
+}) {
   const days = eachDayOfInterval({
     start: startOfWeek(startOfMonth(month), { weekStartsOn: 0 }),
     end: endOfWeek(endOfMonth(month), { weekStartsOn: 0 }),
@@ -238,25 +363,28 @@ function MonthBlock({
           const s = shiftMap.get(key);
           const inMonth = isSameMonth(d, month);
           const isToday = isSameDay(d, new Date());
-          const m = s ? metaFor(s) : null;
-          const Icon = m?.Icon;
+          const preset = s ? presetFor(s) : null;
+          const isSelected = selectedDays.has(key);
           return (
             <button
               key={key}
               onClick={() => onDayTap(d)}
-              className={`relative bg-background min-h-[68px] flex flex-col items-center pt-2 pb-1 transition-colors ${
+              className={`relative bg-background min-h-[68px] flex flex-col items-center pt-2 pb-1 transition-all ${
                 inMonth ? "" : "opacity-30"
-              }`}
+              } ${multiMode && isSelected ? "ring-2 ring-primary ring-inset z-10" : ""}`}
             >
-              {s ? (
-                <div className={`absolute inset-0 ${m!.tint} flex flex-col items-center justify-center`}>
-                  <span className={`text-base font-semibold ${m!.ink}`}>{format(d, "d")}</span>
-                  {Icon && <Icon className={`w-4 h-4 mt-0.5 ${m!.ink} opacity-90`} strokeWidth={2} />}
+              {s && preset ? (
+                <div
+                  className="absolute inset-0 flex flex-col items-center justify-center"
+                  style={{ backgroundColor: preset.bg, color: preset.ink }}
+                >
+                  <span className="text-base font-semibold leading-none">{format(d, "d")}</span>
+                  <span className="text-[10px] font-bold mt-1 tracking-wide opacity-95">{preset.code}</span>
                 </div>
               ) : (
-                <>
-                  <span className={`text-base ${isToday ? "font-bold text-primary" : "text-foreground/90"}`}>{format(d, "d")}</span>
-                </>
+                <span className={`text-base ${isToday ? "font-bold text-primary" : "text-foreground/90"}`}>
+                  {format(d, "d")}
+                </span>
               )}
             </button>
           );
@@ -266,39 +394,96 @@ function MonthBlock({
   );
 }
 
+function ShiftPickerSheet({
+  open, onOpenChange, onPick,
+}: {
+  open: boolean; onOpenChange: (o: boolean) => void;
+  onPick: (p: ShiftPreset) => void;
+}) {
+  const byCat = useMemo(() => {
+    const m: Record<Category, ShiftPreset[]> = { work: [], vacation: [], event: [], appointment: [] };
+    for (const p of SHIFT_LIBRARY) m[p.category].push(p);
+    return m;
+  }, []);
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="bottom" className="rounded-t-3xl max-h-[80dvh] overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle className="font-serif text-2xl text-left">Pick a shift</SheetTitle>
+          <p className="text-xs text-muted-foreground text-left">Applies to every selected day.</p>
+        </SheetHeader>
+        <div className="space-y-5 mt-4 pb-6">
+          {CATEGORIES.map((c) => (
+            <div key={c.id}>
+              <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2 px-1">{c.label}</div>
+              <div className="grid grid-cols-3 gap-2">
+                {byCat[c.id].map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => onPick(p)}
+                    className="rounded-2xl p-3 flex flex-col items-center justify-center min-h-[78px] text-center transition-transform active:scale-95 shadow-sm"
+                    style={{ backgroundColor: p.bg, color: p.ink }}
+                  >
+                    <span className="font-bold text-lg leading-none">{p.code}</span>
+                    <span className="text-[10px] mt-1.5 opacity-90 leading-tight">{p.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
 function ShiftDialog({
-  date, category, existing, onClose, onSaved,
+  date, category, existing, onClose, onSaved, onAddToMore,
 }: {
   date: Date | null; category: Category; existing: Shift | null;
   onClose: () => void; onSaved: () => void;
+  onAddToMore: (d: Date) => void;
 }) {
   const { user } = useAuth();
+  const [presetId, setPresetId] = useState<string>("");
   const [start, setStart] = useState("07:00");
   const [end, setEnd] = useState("19:00");
-  const [type, setType] = useState<string>("Day");
   const [title, setTitle] = useState("");
   const [location, setLocation] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
 
+  const catPresets = useMemo(() => SHIFT_LIBRARY.filter((p) => p.category === category), [category]);
+
   useEffect(() => {
     if (!date) return;
-    setStart(existing?.start_time?.slice(0, 5) ?? (category === "work" ? "07:00" : "09:00"));
-    setEnd(existing?.end_time?.slice(0, 5) ?? (category === "work" ? "19:00" : "10:00"));
-    setType(existing?.type ?? (category === "work" ? "Day" : category));
-    setTitle(existing?.title ?? "");
-    setLocation(existing?.location ?? "");
-    setNotes(existing?.notes ?? "");
-  }, [date, existing, category]);
+    const ex = existing;
+    const fallback = catPresets[0];
+    const initialPreset = ex && LIB_BY_ID.has(ex.type) ? ex.type : fallback?.id ?? "";
+    setPresetId(initialPreset);
+    setStart(ex?.start_time?.slice(0, 5) ?? fallback?.start ?? "09:00");
+    setEnd(ex?.end_time?.slice(0, 5) ?? fallback?.end ?? "10:00");
+    setTitle(ex?.title ?? "");
+    setLocation(ex?.location ?? "");
+    setNotes(ex?.notes ?? "");
+  }, [date, existing, category, catPresets]);
+
+  function applyPreset(p: ShiftPreset) {
+    setPresetId(p.id);
+    setStart(p.start);
+    setEnd(p.end);
+  }
 
   async function save() {
     if (!date) return;
     setSaving(true);
+    const preset = LIB_BY_ID.get(presetId);
     const payload = {
       user_id: user!.id,
       date: format(date, "yyyy-MM-dd"),
       start_time: start, end_time: end,
-      type: category === "work" ? type : category,
+      type: presetId || (preset?.id ?? category),
       category,
       title: title || null,
       location: location || null,
@@ -323,51 +508,54 @@ function ShiftDialog({
     onClose();
   }
 
-  const catLabel = CAT_META[category].label;
   const hrs = existing ? shiftHours(existing.start_time, existing.end_time) : 0;
 
   return (
     <Dialog open={!!date} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="rounded-3xl max-w-sm">
+      <DialogContent className="rounded-3xl max-w-sm max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-serif text-2xl">
             {date && format(date, "EEEE, MMM d")}
           </DialogTitle>
           {existing && (
             <p className="text-xs text-muted-foreground">
-              {catLabel} · {existing.start_time.slice(0, 5)}–{existing.end_time.slice(0, 5)} · {hrs.toFixed(1)}h
+              {existing.start_time.slice(0, 5)}–{existing.end_time.slice(0, 5)} · {hrs.toFixed(1)}h
               {existing.location ? ` · ${existing.location}` : ""}
             </p>
           )}
         </DialogHeader>
-        <div className="space-y-3">
-          {category === "work" && (
-            <div className="flex flex-wrap gap-1.5">
-              {WORK_TYPES.map((t) => {
-                const active = type === t;
-                const tm = TYPE_META[t];
+
+        <div className="space-y-4">
+          {/* Color-coded preset grid */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <Label>Shift</Label>
+              <button
+                type="button"
+                onClick={() => { if (date) { onClose(); setTimeout(() => onAddToMore(date), 50); } }}
+                className="text-[11px] text-primary font-medium"
+              >
+                + Add to more days
+              </button>
+            </div>
+            <div className="grid grid-cols-4 gap-1.5">
+              {catPresets.map((p) => {
+                const active = presetId === p.id;
                 return (
                   <button
-                    key={t}
+                    key={p.id}
                     type="button"
-                    onClick={() => {
-                      setType(t);
-                      if (t === "Day") { setStart("07:00"); setEnd("19:00"); }
-                      else if (t === "Night") { setStart("19:00"); setEnd("07:00"); }
-                      else if (t === "Evening") { setStart("15:00"); setEnd("23:00"); }
-                      else if (t === "On-call") { setStart("08:00"); setEnd("20:00"); }
-                      else { setStart("00:00"); setEnd("00:00"); }
-                    }}
-                    className={`px-3 h-8 rounded-full text-xs font-medium border transition-colors ${
-                      active ? `${tm.tint} ${tm.ink} border-transparent` : "bg-card border-border text-muted-foreground"
-                    }`}
+                    onClick={() => applyPreset(p)}
+                    className={`rounded-xl py-2 flex flex-col items-center transition-all ${active ? "ring-2 ring-foreground ring-offset-1 ring-offset-background scale-[1.02]" : ""}`}
+                    style={{ backgroundColor: p.bg, color: p.ink }}
                   >
-                    {t}
+                    <span className="font-bold text-sm leading-none">{p.code}</span>
+                    <span className="text-[9px] mt-1 opacity-90 leading-tight px-1 text-center">{p.label.split(" ")[0]}</span>
                   </button>
                 );
               })}
             </div>
-          )}
+          </div>
 
           {category !== "work" && (
             <div>
