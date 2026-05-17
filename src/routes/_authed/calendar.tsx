@@ -770,7 +770,11 @@ function MonthBlock({
                 </div>
               ) : (
                 <span
-                  className={`text-base md:text-xl ${isToday ? "font-bold text-primary" : "text-foreground/90"}`}
+                  className={
+                    isToday
+                      ? "inline-flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-primary text-primary-foreground text-base md:text-xl font-semibold"
+                      : `text-base md:text-xl ${inMonth ? "text-foreground/90" : "text-foreground/40"}`
+                  }
                 >
                   {format(d, "d")}
                 </span>
