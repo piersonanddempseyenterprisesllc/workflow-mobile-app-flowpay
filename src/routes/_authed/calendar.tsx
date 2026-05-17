@@ -477,16 +477,17 @@ function MonthBlock({
 }
 
 function ShiftPickerSheet({
-  open, onOpenChange, onPick,
+  open, onOpenChange, onPick, shiftLibrary, onColorChange,
 }: {
   open: boolean; onOpenChange: (o: boolean) => void;
   onPick: (p: ShiftPreset) => void;
+  shiftLibrary: ShiftPreset[]; onColorChange: (id: string, bg: string) => void;
 }) {
   const byCat = useMemo(() => {
     const m: Record<Category, ShiftPreset[]> = { work: [], vacation: [], event: [], appointment: [] };
-    for (const p of SHIFT_LIBRARY) m[p.category].push(p);
+    for (const p of shiftLibrary) m[p.category].push(p);
     return m;
-  }, []);
+  }, [shiftLibrary]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -501,15 +502,23 @@ function ShiftPickerSheet({
               <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2 px-1">{c.label}</div>
               <div className="grid grid-cols-3 gap-2">
                 {byCat[c.id].map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => onPick(p)}
-                    className="rounded-2xl p-3 flex flex-col items-center justify-center min-h-[78px] text-center transition-transform active:scale-95 shadow-sm"
-                    style={{ backgroundColor: p.bg, color: p.ink }}
-                  >
-                    <span className="font-bold text-lg leading-none">{p.code}</span>
-                    <span className="text-[10px] mt-1.5 opacity-90 leading-tight">{p.label}</span>
-                  </button>
+                  <div key={p.id} className="relative">
+                    <button
+                      onClick={() => onPick(p)}
+                      className="w-full rounded-2xl p-3 flex flex-col items-center justify-center min-h-[78px] text-center transition-transform active:scale-95 shadow-sm"
+                      style={{ backgroundColor: p.bg, color: p.ink }}
+                    >
+                      <span className="font-bold text-lg leading-none">{p.code}</span>
+                      <span className="text-[10px] mt-1.5 opacity-90 leading-tight">{p.label}</span>
+                    </button>
+                    <input
+                      aria-label={`${p.label} color`}
+                      type="color"
+                      value={p.bg}
+                      onChange={(e) => onColorChange(p.id, e.target.value)}
+                      className="absolute right-1 top-1 h-6 w-6 rounded-full border border-background bg-transparent p-0"
+                    />
+                  </div>
                 ))}
               </div>
             </div>
