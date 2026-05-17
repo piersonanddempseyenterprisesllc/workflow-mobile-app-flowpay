@@ -373,11 +373,21 @@ function MonthBlock({
           const isToday = isSameDay(d, new Date());
           const preset = s ? presetFor(s) : null;
           const isSelected = selectedDays.has(key);
+          let pressTimer: ReturnType<typeof setTimeout> | null = null;
+          const startPress = () => {
+            if (multiMode) return;
+            pressTimer = setTimeout(() => { onDayLongPress(d); pressTimer = null; }, 400);
+          };
+          const cancelPress = () => { if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; } };
           return (
             <button
               key={key}
               onClick={() => onDayTap(d)}
-              className={`relative bg-background min-h-[68px] md:min-h-[96px] lg:min-h-[120px] flex flex-col items-center pt-2 pb-1 transition-all ${
+              onPointerDown={startPress}
+              onPointerUp={cancelPress}
+              onPointerLeave={cancelPress}
+              onPointerCancel={cancelPress}
+              className={`relative bg-background min-h-[68px] md:min-h-[96px] lg:min-h-[120px] flex flex-col items-center pt-2 pb-1 transition-all touch-manipulation select-none ${
                 inMonth ? "" : "opacity-30"
               } ${multiMode && isSelected ? "ring-2 ring-primary ring-inset z-10" : ""}`}
             >
