@@ -43,9 +43,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "Workflow — Shifts, Friends & FlowPay" },
+      { title: "Workflow (Shifts, Friends & FlowPay)" },
       { name: "description", content: "A calm, premium app for shift workers: schedule, connect with coworkers, and manage work payments with FlowPay." },
       { name: "theme-color", content: "#f6f3eb" },
+      { property: "og:title", content: "Workflow (Shifts, Friends & FlowPay)" },
+      { name: "twitter:title", content: "Workflow (Shifts, Friends & FlowPay)" },
+      { property: "og:description", content: "A calm, premium app for shift workers: schedule, connect with coworkers, and manage work payments with FlowPay." },
+      { name: "twitter:description", content: "A calm, premium app for shift workers: schedule, connect with coworkers, and manage work payments with FlowPay." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/e1N5vkeK5GPvNPXiHkocdRkMlmJ3/social-images/social-1779031530064-workflow-app-icon.webp" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/e1N5vkeK5GPvNPXiHkocdRkMlmJ3/social-images/social-1779031530064-workflow-app-icon.webp" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:type", content: "website" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
