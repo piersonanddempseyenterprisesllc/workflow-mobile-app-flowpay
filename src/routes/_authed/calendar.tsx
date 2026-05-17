@@ -404,16 +404,26 @@ function CalendarPage() {
   useEffect(() => {
     const saved = window.localStorage.getItem("nurse-grid-shift-colors");
     if (saved) setColorOverrides(JSON.parse(saved) as ShiftColorOverrides);
+    const savedTheme = window.localStorage.getItem("nurse-grid-theme");
+    if (savedTheme) setThemeId(savedTheme);
   }, []);
+
+  const activeTheme = useMemo(
+    () => THEMES.find((t) => t.id === themeId) ?? THEMES[0],
+    [themeId],
+  );
 
   const shiftLibrary = useMemo(
     () =>
-      DEFAULT_SHIFT_LIBRARY.map((p) => ({
-        ...p,
-        bg: colorOverrides[p.id]?.bg ?? p.bg,
-        ink: colorOverrides[p.id]?.ink ?? p.ink,
-      })),
-    [colorOverrides],
+      DEFAULT_SHIFT_LIBRARY.map((p) => {
+        const themeBg = activeTheme.colors[p.id];
+        const override = colorOverrides[p.id];
+        const bg = override?.bg ?? themeBg ?? p.bg;
+        const ink = override?.ink ?? (themeBg ? textColorFor(themeBg) : p.ink);
+        const icon = override?.icon ?? p.icon ?? DEFAULT_ICONS[p.id];
+        return { ...p, bg, ink, icon };
+      }),
+    [colorOverrides, activeTheme],
   );
 
   const libById = useMemo(() => new Map(shiftLibrary.map((p) => [p.id, p])), [shiftLibrary]);
