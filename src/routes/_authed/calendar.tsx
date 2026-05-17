@@ -226,13 +226,16 @@ function CalendarPage() {
           </div>
           <h1 className="font-serif text-2xl">Calendar</h1>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => (multiMode ? cancelMulti() : enterMultiFrom())}
-            className={`w-10 h-10 rounded-full flex items-center justify-center hover:bg-muted/60 ${multiMode ? "text-primary" : "text-foreground"}`}
-            aria-label="Multi-select"
+            className={`h-10 px-3 rounded-full flex items-center gap-1.5 text-sm font-medium transition-colors ${
+              multiMode ? "bg-primary text-primary-foreground" : "bg-muted/60 text-foreground hover:bg-muted"
+            }`}
+            aria-label="Select multiple days"
           >
-            <CheckSquare className="w-5 h-5" />
+            <CheckSquare className="w-4 h-4" />
+            <span className="hidden sm:inline">{multiMode ? "Done" : "Select days"}</span>
           </button>
           <button onClick={() => setOpenShare(true)} className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-muted/60 text-foreground">
             <Share2 className="w-5 h-5" />
