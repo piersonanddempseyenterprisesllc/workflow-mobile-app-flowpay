@@ -43,7 +43,9 @@ type ShiftPreset = {
   category: Category;
 };
 
-const SHIFT_LIBRARY: ShiftPreset[] = [
+type ShiftColorOverrides = Record<string, { bg: string; ink: string }>;
+
+const DEFAULT_SHIFT_LIBRARY: ShiftPreset[] = [
   // Work
   { id: "D7",  code: "D",   label: "Day 7a–7p",     start: "07:00", end: "19:00", bg: "#F4C76A", ink: "#3a2a05", category: "work" },
   { id: "D8",  code: "D8",  label: "Day 7a–3p",     start: "07:00", end: "15:00", bg: "#F8DE9B", ink: "#3a2a05", category: "work" },
@@ -68,16 +70,16 @@ const SHIFT_LIBRARY: ShiftPreset[] = [
   { id: "APPT",code: "APT", label: "Appointment",   start: "09:00", end: "10:00", bg: "#B89BC9", ink: "#fff",    category: "appointment" },
 ];
 
-const LIB_BY_ID = new Map(SHIFT_LIBRARY.map((p) => [p.id, p]));
+const DEFAULT_COLORS = new Map(DEFAULT_SHIFT_LIBRARY.map((p) => [p.id, { bg: p.bg, ink: p.ink }]));
 
-function presetFor(s: Shift): ShiftPreset | null {
+function presetFor(s: Shift, library: ShiftPreset[], libById: Map<string, ShiftPreset>): ShiftPreset | null {
   // type column stores either preset id (new) or legacy label
-  if (LIB_BY_ID.has(s.type)) return LIB_BY_ID.get(s.type)!;
+  if (libById.has(s.type)) return libById.get(s.type)!;
   // Legacy fallback by label match within library
-  const legacy = SHIFT_LIBRARY.find((p) => p.label.startsWith(s.type) || p.code === s.type);
+  const legacy = library.find((p) => p.label.startsWith(s.type) || p.code === s.type);
   if (legacy) return legacy;
   // Category fallback
-  return SHIFT_LIBRARY.find((p) => p.category === (s.category as Category)) ?? null;
+  return library.find((p) => p.category === (s.category as Category)) ?? null;
 }
 
 function shiftHours(start: string, end: string): number {
