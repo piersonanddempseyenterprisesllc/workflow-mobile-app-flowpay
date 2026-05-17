@@ -23,7 +23,7 @@ function AuthedLayout() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="app-shell px-4 pt-6">
+      <div className="app-shell px-4 pt-6 pb-0">
         <Outlet />
       </div>
       <BottomNav />

@@ -1,12 +1,12 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Home, Calendar, Users, Wallet, User } from "lucide-react";
+import { Calendar, Users, Briefcase, BookOpen, Inbox } from "lucide-react";
 
 const items = [
-  { to: "/home", label: "Home", icon: Home },
   { to: "/calendar", label: "Calendar", icon: Calendar },
-  { to: "/flowpay", label: "FlowPay", icon: Wallet },
-  { to: "/social", label: "Friends", icon: Users },
-  { to: "/profile", label: "Profile", icon: User },
+  { to: "/social", label: "Colleagues", icon: Users },
+  { to: "/flowpay", label: "Find Jobs", icon: Briefcase },
+  { to: "/home", label: "Learn", icon: BookOpen },
+  { to: "/profile", label: "Inbox", icon: Inbox },
 ] as const;
 
 export function BottomNav() {
@@ -22,10 +22,10 @@ export function BottomNav() {
                 key={to}
                 to={to}
                 className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-2xl transition-colors ${
-                  active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  active ? "text-primary" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <Icon className="w-5 h-5" strokeWidth={active ? 2.2 : 1.8} />
+                <Icon className="w-5 h-5" strokeWidth={active ? 2.2 : 1.7} />
                 <span className="text-[10px] font-medium tracking-wide">{label}</span>
               </Link>
             );
