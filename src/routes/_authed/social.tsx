@@ -19,7 +19,7 @@ function SocialPage() {
     queryKey: ["friends", user?.id],
     queryFn: async () => {
       const { data } = await supabase.from("friends")
-        .select("friend_id, status, profiles:friend_id(id, full_name, profession_id, professions(name))")
+        .select("friend_id, status, profiles!friends_friend_id_profiles_fkey(id, full_name, profession_id, professions(name))")
         .eq("user_id", user!.id).eq("status", "active");
       return data ?? [];
     },
@@ -30,7 +30,7 @@ function SocialPage() {
     queryKey: ["sharedWith", user?.id],
     queryFn: async () => {
       const { data } = await supabase.from("schedule_access")
-        .select("viewer_user_id, profiles:viewer_user_id(id, full_name)")
+        .select("viewer_user_id, profiles!schedule_access_viewer_profiles_fkey(id, full_name)")
         .eq("owner_user_id", user!.id);
       return data ?? [];
     },
