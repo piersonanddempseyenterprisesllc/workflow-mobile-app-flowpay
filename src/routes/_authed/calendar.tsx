@@ -518,6 +518,18 @@ function CalendarPage() {
             <Share2 className="w-5 h-5" />
           </button>
           <button
+            onClick={() => {
+              const el = scrollerRef.current;
+              const t = el?.querySelector<HTMLElement>(
+                `[data-month="${format(new Date(), "yyyy-MM")}"]`,
+              );
+              if (el && t) el.scrollTo({ top: t.offsetTop - 8, behavior: "smooth" });
+            }}
+            className="h-10 px-3 rounded-full text-sm font-medium bg-muted/60 hover:bg-muted text-foreground"
+          >
+            Today
+          </button>
+          <button
             onClick={() => setSelected(new Date())}
             className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-muted/60 text-foreground"
           >
