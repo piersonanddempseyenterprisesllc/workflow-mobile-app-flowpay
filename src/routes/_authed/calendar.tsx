@@ -237,6 +237,12 @@ function CalendarPage() {
   const initials = (profile?.full_name ?? user?.email ?? "U")
     .split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
 
+  function updateShiftColor(id: string, bg: string) {
+    const next = { ...colorOverrides, [id]: { bg, ink: textColorFor(bg) } };
+    setColorOverrides(next);
+    window.localStorage.setItem("nurse-grid-shift-colors", JSON.stringify(next));
+  }
+
   return (
     <div className="-mx-4 -mt-6 flex flex-col h-[100dvh]">
       {/* Header */}
@@ -298,15 +304,12 @@ function CalendarPage() {
             key={format(m, "yyyy-MM")}
             month={m}
             shiftMap={shiftMap}
+            shiftLibrary={shiftLibrary}
+            libById={libById}
             onDayTap={onDayTap}
-            onDayLongPress={enterMultiFrom}
-            onDaySelectToggle={(d) => {
+            onSelectDay={(d) => {
               const k = format(d, "yyyy-MM-dd");
-              setSelectedDays((prev) => {
-                const next = new Set(prev);
-                next.has(k) ? next.delete(k) : next.add(k);
-                return next;
-              });
+              setSelectedDays((prev) => (prev.has(k) ? prev : new Set(prev).add(k)));
             }}
             selectedDays={selectedDays}
             multiMode={multiMode}
@@ -349,6 +352,8 @@ function CalendarPage() {
         open={pickerOpen}
         onOpenChange={setPickerOpen}
         onPick={applyPresetToSelection}
+        shiftLibrary={shiftLibrary}
+        onColorChange={updateShiftColor}
       />
 
       {/* Single-day dialog */}
@@ -356,6 +361,9 @@ function CalendarPage() {
         date={selected}
         category={activeCat}
         existing={selected ? shiftMap.get(format(selected, "yyyy-MM-dd")) ?? null : null}
+        shiftLibrary={shiftLibrary}
+        libById={libById}
+        onColorChange={updateShiftColor}
         onClose={() => setSelected(null)}
         onSaved={() => qc.invalidateQueries({ queryKey: ["shifts"] })}
         onAddToMore={(d) => enterMultiFrom(d)}
