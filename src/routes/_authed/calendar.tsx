@@ -182,13 +182,13 @@ function CalendarPage() {
 
   function onDayTap(d: Date) {
     const key = format(d, "yyyy-MM-dd");
-    if (multiMode) {
-      const next = new Set(selectedDays);
+    setMultiMode(true);
+    setSelected(null);
+    setSelectedDays((prev) => {
+      const next = new Set(prev);
       next.has(key) ? next.delete(key) : next.add(key);
-      setSelectedDays(next);
-    } else {
-      setSelected(d);
-    }
+      return next;
+    });
   }
 
   function enterMultiFrom(d?: Date) {
@@ -375,19 +375,16 @@ function CalendarPage() {
 }
 
 function MonthBlock({
-  month, shiftMap, onDayTap, onDayLongPress, onDaySelectToggle, selectedDays, multiMode,
+  month, shiftMap, shiftLibrary, libById, onDayTap, onSelectDay, selectedDays, multiMode,
 }: {
-  month: Date; shiftMap: Map<string, Shift>;
-  onDayTap: (d: Date) => void; onDayLongPress: (d: Date) => void;
-  onDaySelectToggle: (d: Date) => void;
+  month: Date; shiftMap: Map<string, Shift>; shiftLibrary: ShiftPreset[]; libById: Map<string, ShiftPreset>;
+  onDayTap: (d: Date) => void; onSelectDay: (d: Date) => void;
   selectedDays: Set<string>; multiMode: boolean;
 }) {
   const days = eachDayOfInterval({
     start: startOfWeek(startOfMonth(month), { weekStartsOn: 0 }),
     end: endOfWeek(endOfMonth(month), { weekStartsOn: 0 }),
   });
-  const pressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const longPressedRef = useRef(false);
   const draggingRef = useRef(false);
   const lastToggledRef = useRef<string | null>(null);
 
@@ -427,45 +424,28 @@ function MonthBlock({
           const s = shiftMap.get(key);
           const inMonth = isSameMonth(d, month);
           const isToday = isSameDay(d, new Date());
-          const preset = s ? presetFor(s) : null;
+          const preset = s ? presetFor(s, shiftLibrary, libById) : null;
           const isSelected = selectedDays.has(key);
 
-          const startPress = (e: React.PointerEvent) => {
-            longPressedRef.current = false;
-            if (multiMode) {
-              // start drag selection
-              draggingRef.current = true;
-              lastToggledRef.current = key;
-              onDaySelectToggle(d);
-              return;
-            }
-            if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
-            pressTimerRef.current = setTimeout(() => {
-              longPressedRef.current = true;
-              draggingRef.current = true;
-              lastToggledRef.current = key;
-              onDayLongPress(d);
-              pressTimerRef.current = null;
-            }, 350);
+          const startPress = () => {
+            draggingRef.current = true;
+            lastToggledRef.current = key;
+            onDayTap(d);
           };
           const cancelPress = () => {
-            if (pressTimerRef.current) { clearTimeout(pressTimerRef.current); pressTimerRef.current = null; }
+            draggingRef.current = false;
+            lastToggledRef.current = null;
           };
           const onEnter = () => {
             if (!draggingRef.current) return;
             if (lastToggledRef.current === key) return;
             lastToggledRef.current = key;
-            onDaySelectToggle(d);
-          };
-          const onClick = (e: React.MouseEvent) => {
-            if (longPressedRef.current) { e.preventDefault(); longPressedRef.current = false; return; }
-            onDayTap(d);
+            onSelectDay(d);
           };
 
           return (
             <button
               key={key}
-              onClick={onClick}
               onPointerDown={startPress}
               onPointerEnter={onEnter}
               onPointerUp={cancelPress}
