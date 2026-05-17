@@ -14,5 +14,5 @@ function Index() {
       </div>
     );
   }
-  return <Navigate to={user ? "/home" : "/auth"} />;
+  return <Navigate to={user ? "/calendar" : "/auth"} />;
 }

@@ -18,7 +18,7 @@ function AuthPage() {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => { if (user) nav({ to: "/home" }); }, [user, nav]);
+  useEffect(() => { if (user) nav({ to: "/calendar" }); }, [user, nav]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -27,7 +27,7 @@ function AuthPage() {
       if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
           email, password,
-          options: { data: { full_name: name }, emailRedirectTo: `${window.location.origin}/home` },
+          options: { data: { full_name: name }, emailRedirectTo: `${window.location.origin}/calendar` },
         });
         if (error) throw error;
         toast.success("Welcome to Workflow");
