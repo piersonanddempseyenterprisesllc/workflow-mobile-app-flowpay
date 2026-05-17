@@ -729,6 +729,9 @@ function CalendarPage() {
         onPick={applyPresetToSelection}
         shiftLibrary={shiftLibrary}
         onColorChange={updateShiftColor}
+        onIconChange={updateShiftIcon}
+        themeId={themeId}
+        onThemeChange={applyTheme}
       />
 
       {/* Single-day dialog */}
