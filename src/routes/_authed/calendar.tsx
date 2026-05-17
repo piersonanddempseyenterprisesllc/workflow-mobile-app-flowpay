@@ -333,10 +333,11 @@ function CalendarPage() {
 }
 
 function MonthBlock({
-  month, shiftMap, onDayTap, selectedDays, multiMode,
+  month, shiftMap, onDayTap, onDayLongPress, selectedDays, multiMode,
 }: {
   month: Date; shiftMap: Map<string, Shift>;
-  onDayTap: (d: Date) => void; selectedDays: Set<string>; multiMode: boolean;
+  onDayTap: (d: Date) => void; onDayLongPress: (d: Date) => void;
+  selectedDays: Set<string>; multiMode: boolean;
 }) {
   const days = eachDayOfInterval({
     start: startOfWeek(startOfMonth(month), { weekStartsOn: 0 }),
