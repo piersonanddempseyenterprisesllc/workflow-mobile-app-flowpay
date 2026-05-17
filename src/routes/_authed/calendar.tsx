@@ -369,7 +369,7 @@ function MonthBlock({
             <button
               key={key}
               onClick={() => onDayTap(d)}
-              className={`relative bg-background min-h-[68px] flex flex-col items-center pt-2 pb-1 transition-all ${
+              className={`relative bg-background min-h-[68px] md:min-h-[96px] lg:min-h-[120px] flex flex-col items-center pt-2 pb-1 transition-all ${
                 inMonth ? "" : "opacity-30"
               } ${multiMode && isSelected ? "ring-2 ring-primary ring-inset z-10" : ""}`}
             >
@@ -378,11 +378,11 @@ function MonthBlock({
                   className="absolute inset-0 flex flex-col items-center justify-center"
                   style={{ backgroundColor: preset.bg, color: preset.ink }}
                 >
-                  <span className="text-base font-semibold leading-none">{format(d, "d")}</span>
-                  <span className="text-[10px] font-bold mt-1 tracking-wide opacity-95">{preset.code}</span>
+                  <span className="text-base md:text-xl font-semibold leading-none">{format(d, "d")}</span>
+                  <span className="text-[10px] md:text-xs font-bold mt-1 tracking-wide opacity-95">{preset.code}</span>
                 </div>
               ) : (
-                <span className={`text-base ${isToday ? "font-bold text-primary" : "text-foreground/90"}`}>
+                <span className={`text-base md:text-xl ${isToday ? "font-bold text-primary" : "text-foreground/90"}`}>
                   {format(d, "d")}
                 </span>
               )}
