@@ -70,8 +70,6 @@ const DEFAULT_SHIFT_LIBRARY: ShiftPreset[] = [
   { id: "APPT",code: "APT", label: "Appointment",   start: "09:00", end: "10:00", bg: "#B89BC9", ink: "#fff",    category: "appointment" },
 ];
 
-const DEFAULT_COLORS = new Map(DEFAULT_SHIFT_LIBRARY.map((p) => [p.id, { bg: p.bg, ink: p.ink }]));
-
 function presetFor(s: Shift, library: ShiftPreset[], libById: Map<string, ShiftPreset>): ShiftPreset | null {
   // type column stores either preset id (new) or legacy label
   if (libById.has(s.type)) return libById.get(s.type)!;
