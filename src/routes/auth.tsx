@@ -44,6 +44,25 @@ function AuthPage() {
     }
   }
 
+  async function handleForgotPassword() {
+    if (!email) {
+      toast.error("Enter your email above first");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success("Check your email for a reset link");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <div className="app-shell flex-1 flex flex-col justify-center px-6 py-12 !pb-12">
@@ -77,7 +96,19 @@ function AuthPage() {
               <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1.5 h-12 rounded-xl" />
             </div>
             <div>
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                {mode === "signin" && (
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    disabled={loading}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    Forgot password?
+                  </button>
+                )}
+              </div>
               <div className="relative mt-1.5">
                 <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="h-12 rounded-xl pr-12" />
                 <button
