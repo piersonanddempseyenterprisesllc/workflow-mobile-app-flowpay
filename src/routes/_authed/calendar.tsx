@@ -275,6 +275,14 @@ function CalendarPage() {
             shiftMap={shiftMap}
             onDayTap={onDayTap}
             onDayLongPress={enterMultiFrom}
+            onDaySelectToggle={(d) => {
+              const k = format(d, "yyyy-MM-dd");
+              setSelectedDays((prev) => {
+                const next = new Set(prev);
+                next.has(k) ? next.delete(k) : next.add(k);
+                return next;
+              });
+            }}
             selectedDays={selectedDays}
             multiMode={multiMode}
           />
@@ -334,16 +342,31 @@ function CalendarPage() {
 }
 
 function MonthBlock({
-  month, shiftMap, onDayTap, onDayLongPress, selectedDays, multiMode,
+  month, shiftMap, onDayTap, onDayLongPress, onDaySelectToggle, selectedDays, multiMode,
 }: {
   month: Date; shiftMap: Map<string, Shift>;
   onDayTap: (d: Date) => void; onDayLongPress: (d: Date) => void;
+  onDaySelectToggle: (d: Date) => void;
   selectedDays: Set<string>; multiMode: boolean;
 }) {
   const days = eachDayOfInterval({
     start: startOfWeek(startOfMonth(month), { weekStartsOn: 0 }),
     end: endOfWeek(endOfMonth(month), { weekStartsOn: 0 }),
   });
+  const pressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressedRef = useRef(false);
+  const draggingRef = useRef(false);
+  const lastToggledRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const up = () => { draggingRef.current = false; lastToggledRef.current = null; };
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", up);
+    return () => {
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", up);
+    };
+  }, []);
 
   return (
     <section className="pt-5 pb-2">
@@ -373,17 +396,45 @@ function MonthBlock({
           const isToday = isSameDay(d, new Date());
           const preset = s ? presetFor(s) : null;
           const isSelected = selectedDays.has(key);
-          let pressTimer: ReturnType<typeof setTimeout> | null = null;
-          const startPress = () => {
-            if (multiMode) return;
-            pressTimer = setTimeout(() => { onDayLongPress(d); pressTimer = null; }, 400);
+
+          const startPress = (e: React.PointerEvent) => {
+            longPressedRef.current = false;
+            if (multiMode) {
+              // start drag selection
+              draggingRef.current = true;
+              lastToggledRef.current = key;
+              onDaySelectToggle(d);
+              return;
+            }
+            if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
+            pressTimerRef.current = setTimeout(() => {
+              longPressedRef.current = true;
+              draggingRef.current = true;
+              lastToggledRef.current = key;
+              onDayLongPress(d);
+              pressTimerRef.current = null;
+            }, 350);
           };
-          const cancelPress = () => { if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; } };
+          const cancelPress = () => {
+            if (pressTimerRef.current) { clearTimeout(pressTimerRef.current); pressTimerRef.current = null; }
+          };
+          const onEnter = () => {
+            if (!draggingRef.current) return;
+            if (lastToggledRef.current === key) return;
+            lastToggledRef.current = key;
+            onDaySelectToggle(d);
+          };
+          const onClick = (e: React.MouseEvent) => {
+            if (longPressedRef.current) { e.preventDefault(); longPressedRef.current = false; return; }
+            onDayTap(d);
+          };
+
           return (
             <button
               key={key}
-              onClick={() => onDayTap(d)}
+              onClick={onClick}
               onPointerDown={startPress}
+              onPointerEnter={onEnter}
               onPointerUp={cancelPress}
               onPointerLeave={cancelPress}
               onPointerCancel={cancelPress}
