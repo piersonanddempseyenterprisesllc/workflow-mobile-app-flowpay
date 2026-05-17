@@ -1,0 +1,89 @@
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth-context";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+
+export const Route = createFileRoute("/auth")({ component: AuthPage });
+
+function AuthPage() {
+  const { user } = useAuth();
+  const nav = useNavigate();
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => { if (user) nav({ to: "/home" }); }, [user, nav]);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      if (mode === "signup") {
+        const { error } = await supabase.auth.signUp({
+          email, password,
+          options: { data: { full_name: name }, emailRedirectTo: `${window.location.origin}/home` },
+        });
+        if (error) throw error;
+        toast.success("Welcome to Workflow");
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      <div className="app-shell flex-1 flex flex-col justify-center px-6 py-12 !pb-12">
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary text-primary-foreground mb-5 font-serif text-2xl">W</div>
+          <h1 className="font-serif text-4xl text-foreground">Workflow</h1>
+          <p className="mt-2 text-sm text-muted-foreground">Shifts, coworkers & FlowPay — one calm space.</p>
+        </div>
+
+        <div className="soft-card p-6">
+          <div className="flex bg-muted rounded-full p-1 mb-6">
+            {(["signin", "signup"] as const).map((m) => (
+              <button key={m} type="button" onClick={() => setMode(m)}
+                className={`flex-1 py-2 text-sm rounded-full transition-colors ${
+                  mode === m ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+                }`}>
+                {m === "signin" ? "Sign in" : "Sign up"}
+              </button>
+            ))}
+          </div>
+
+          <form onSubmit={submit} className="space-y-4">
+            {mode === "signup" && (
+              <div>
+                <Label htmlFor="name">Full name</Label>
+                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required className="mt-1.5 h-12 rounded-xl" />
+              </div>
+            )}
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1.5 h-12 rounded-xl" />
+            </div>
+            <div>
+              <Label htmlFor="password">Password</Label>
+              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="mt-1.5 h-12 rounded-xl" />
+            </div>
+            <Button type="submit" disabled={loading} className="w-full h-12 rounded-xl text-base">
+              {loading ? "Please wait…" : mode === "signin" ? "Sign in" : "Create account"}
+            </Button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
