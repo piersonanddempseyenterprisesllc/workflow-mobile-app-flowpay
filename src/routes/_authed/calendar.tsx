@@ -369,6 +369,7 @@ function CalendarPage() {
   const [selectedDays, setSelectedDays] = useState<Set<string>>(new Set());
   const [pickerOpen, setPickerOpen] = useState(false);
   const [colorOverrides, setColorOverrides] = useState<ShiftColorOverrides>({});
+  const [themeId, setThemeId] = useState<string>("default");
 
   // Anchor "today" to mount-time start-of-month so month list stays accurate
   // across re-renders and grows symmetrically as the user scrolls.
