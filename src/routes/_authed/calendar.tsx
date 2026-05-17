@@ -298,17 +298,35 @@ function CalendarPage() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [colorOverrides, setColorOverrides] = useState<ShiftColorOverrides>({});
 
-  const today = new Date();
-  const [monthsBack, setMonthsBack] = useState(2);
-  const [monthsForward, setMonthsForward] = useState(6);
+  // Anchor "today" to mount-time start-of-month so month list stays accurate
+  // across re-renders and grows symmetrically as the user scrolls.
+  const anchorRef = useRef<Date>(startOfMonth(new Date()));
+  const [monthsBack, setMonthsBack] = useState(6);
+  const [monthsForward, setMonthsForward] = useState(12);
   const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const loadingRef = useRef(false);
+  const didInitialScrollRef = useRef(false);
 
   const months = useMemo(() => {
     const list: Date[] = [];
-    for (let i = -monthsBack; i <= monthsForward; i++) list.push(addMonths(today, i));
+    for (let i = -monthsBack; i <= monthsForward; i++)
+      list.push(addMonths(anchorRef.current, i));
     return list;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [monthsBack, monthsForward]);
+
+  // Scroll to current month on first mount
+  useEffect(() => {
+    if (didInitialScrollRef.current) return;
+    const el = scrollerRef.current;
+    if (!el) return;
+    const target = el.querySelector<HTMLElement>(
+      `[data-month="${format(anchorRef.current, "yyyy-MM")}"]`,
+    );
+    if (target) {
+      el.scrollTop = target.offsetTop - 8;
+      didInitialScrollRef.current = true;
+    }
+  }, [months]);
 
   useEffect(() => {
     const saved = window.localStorage.getItem("nurse-grid-shift-colors");
@@ -367,14 +385,22 @@ function CalendarPage() {
 
   function onScroll() {
     const el = scrollerRef.current;
-    if (!el) return;
-    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 400) setMonthsForward((n) => n + 3);
-    if (el.scrollTop < 200) {
-      const prev = el.scrollHeight;
-      setMonthsBack((n) => n + 2);
+    if (!el || loadingRef.current) return;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 600) {
+      loadingRef.current = true;
+      setMonthsForward((n) => n + 6);
       requestAnimationFrame(() => {
-        if (scrollerRef.current)
-          scrollerRef.current.scrollTop += scrollerRef.current.scrollHeight - prev;
+        loadingRef.current = false;
+      });
+    } else if (el.scrollTop < 300) {
+      loadingRef.current = true;
+      const prevHeight = el.scrollHeight;
+      setMonthsBack((n) => n + 6);
+      requestAnimationFrame(() => {
+        if (scrollerRef.current) {
+          scrollerRef.current.scrollTop += scrollerRef.current.scrollHeight - prevHeight;
+        }
+        loadingRef.current = false;
       });
     }
   }
@@ -646,7 +672,7 @@ function MonthBlock({
   }, []);
 
   return (
-    <section className="pt-5 pb-2">
+    <section data-month={format(month, "yyyy-MM")} className="pt-5 pb-2">
       <div className="px-3 flex items-center justify-between mb-3">
         <h2 className="font-serif text-xl md:text-3xl">{format(month, "MMMM yyyy")}</h2>
         <div className="flex items-center gap-1 text-muted-foreground">
