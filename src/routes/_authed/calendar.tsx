@@ -274,6 +274,7 @@ function CalendarPage() {
             month={m}
             shiftMap={shiftMap}
             onDayTap={onDayTap}
+            onDayLongPress={enterMultiFrom}
             selectedDays={selectedDays}
             multiMode={multiMode}
           />
