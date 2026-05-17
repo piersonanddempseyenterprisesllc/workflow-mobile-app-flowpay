@@ -318,6 +318,14 @@ const DEFAULT_SHIFT_LIBRARY: ShiftPreset[] = [
   },
 ];
 
+const DEFAULT_ICONS: Record<string, string> = {
+  D7: "sun", D8: "sunrise", E8: "sunset", N7: "moon", N8: "moon",
+  OC: "briefcase", OFF: "coffee", OT: "star",
+  PTO: "umbrella", VAC: "plane", SICK: "smile", HOL: "party",
+  EVT: "calendar", BDAY: "cake", MTG: "briefcase",
+  DR: "stethoscope", DENT: "smile", APPT: "heart",
+};
+
 function presetFor(
   s: Shift,
   library: ShiftPreset[],
