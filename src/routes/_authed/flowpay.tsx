@@ -177,7 +177,7 @@ function MoneyDialog({ mode, open, onClose }: { mode: "send" | "request"; open: 
     setBusy(true);
     try {
       if (mode === "send") {
-        const { error } = await supabase.rpc("send_money", { p_receiver: friendId, p_amount: amt, p_note: note || null });
+        const { error } = await supabase.rpc("send_money", { p_receiver: friendId, p_amount: amt, p_note: note || undefined });
         if (error) throw error;
         toast.success("Sent");
       } else {
