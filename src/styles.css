@@ -110,6 +110,8 @@
 }
 
 @layer utilities {
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { scrollbar-width: none; }
   .app-shell {
     max-width: 480px;
     margin-inline: auto;
