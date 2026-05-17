@@ -33,6 +33,9 @@
   --color-gold-foreground: var(--gold-foreground);
   --color-day-shift: var(--day-shift);
   --color-night-shift: var(--night-shift);
+  --color-evening-shift: var(--evening-shift);
+  --color-oncall-shift: var(--oncall-shift);
+  --color-off-shift: var(--off-shift);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
@@ -70,8 +73,11 @@
   --gold-foreground: oklch(0.28 0.04 60);
 
   /* Shift colors */
-  --day-shift: oklch(0.88 0.06 85);
-  --night-shift: oklch(0.46 0.06 240);
+  --day-shift: oklch(0.78 0.12 70);
+  --night-shift: oklch(0.42 0.09 265);
+  --evening-shift: oklch(0.62 0.14 30);
+  --oncall-shift: oklch(0.62 0.12 305);
+  --off-shift: oklch(0.55 0.05 155);
 
   --destructive: oklch(0.55 0.18 25);
   --destructive-foreground: oklch(0.985 0.012 85);
