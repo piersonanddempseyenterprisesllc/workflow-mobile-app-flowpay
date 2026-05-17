@@ -388,17 +388,45 @@ function MonthBlock({
           const isToday = isSameDay(d, new Date());
           const preset = s ? presetFor(s) : null;
           const isSelected = selectedDays.has(key);
-          let pressTimer: ReturnType<typeof setTimeout> | null = null;
-          const startPress = () => {
-            if (multiMode) return;
-            pressTimer = setTimeout(() => { onDayLongPress(d); pressTimer = null; }, 400);
+
+          const startPress = (e: React.PointerEvent) => {
+            longPressedRef.current = false;
+            if (multiMode) {
+              // start drag selection
+              draggingRef.current = true;
+              lastToggledRef.current = key;
+              onDaySelectToggle(d);
+              return;
+            }
+            if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
+            pressTimerRef.current = setTimeout(() => {
+              longPressedRef.current = true;
+              draggingRef.current = true;
+              lastToggledRef.current = key;
+              onDayLongPress(d);
+              pressTimerRef.current = null;
+            }, 350);
           };
-          const cancelPress = () => { if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; } };
+          const cancelPress = () => {
+            if (pressTimerRef.current) { clearTimeout(pressTimerRef.current); pressTimerRef.current = null; }
+          };
+          const onEnter = () => {
+            if (!draggingRef.current) return;
+            if (lastToggledRef.current === key) return;
+            lastToggledRef.current = key;
+            onDaySelectToggle(d);
+          };
+          const onClick = (e: React.MouseEvent) => {
+            if (longPressedRef.current) { e.preventDefault(); longPressedRef.current = false; return; }
+            onDayTap(d);
+          };
+
           return (
             <button
               key={key}
-              onClick={() => onDayTap(d)}
+              onClick={onClick}
               onPointerDown={startPress}
+              onPointerEnter={onEnter}
               onPointerUp={cancelPress}
               onPointerLeave={cancelPress}
               onPointerCancel={cancelPress}
