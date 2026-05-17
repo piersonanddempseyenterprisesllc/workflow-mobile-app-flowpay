@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
+import workflowLogo from "@/assets/workflow-logo.png";
 
 export const Route = createFileRoute("/auth")({ component: AuthPage });
 
@@ -67,7 +68,7 @@ function AuthPage() {
     <div className="min-h-screen bg-background flex flex-col">
       <div className="app-shell flex-1 flex flex-col justify-center px-6 py-12 !pb-12">
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary text-primary-foreground mb-5 font-serif text-2xl">W</div>
+          <img src={workflowLogo} alt="Workflow logo" width={112} height={112} className="mx-auto mb-5 w-20 h-20 rounded-2xl" />
           <h1 className="font-serif text-4xl text-foreground">Workflow</h1>
           <p className="mt-2 text-sm text-muted-foreground">Shifts, coworkers & FlowPay — one calm space.</p>
         </div>
