@@ -33,7 +33,7 @@ function FlowPayPage() {
     queryKey: ["transactions", user?.id],
     queryFn: async () => {
       const { data } = await supabase.from("transactions")
-        .select("*, sender:sender_id(id, full_name), receiver:receiver_id(id, full_name)")
+        .select("*, sender:profiles!transactions_sender_profiles_fkey(id, full_name), receiver:profiles!transactions_receiver_profiles_fkey(id, full_name)")
         .or(`sender_id.eq.${user!.id},receiver_id.eq.${user!.id}`)
         .order("created_at", { ascending: false }).limit(50);
       return data ?? [];
@@ -45,7 +45,7 @@ function FlowPayPage() {
     queryKey: ["requests", user?.id],
     queryFn: async () => {
       const { data } = await supabase.from("payment_requests")
-        .select("*, requester:requester_id(id, full_name)")
+        .select("*, requester:profiles!payment_requests_requester_profiles_fkey(id, full_name)")
         .eq("receiver_id", user!.id).eq("status", "pending");
       return data ?? [];
     },
@@ -164,7 +164,7 @@ function MoneyDialog({ mode, open, onClose }: { mode: "send" | "request"; open: 
     queryKey: ["friends-flowpay", user?.id],
     queryFn: async () => {
       const { data } = await supabase.from("friends")
-        .select("friend_id, profiles:friend_id(id, full_name)")
+        .select("friend_id, profiles!friends_friend_id_profiles_fkey(id, full_name)")
         .eq("user_id", user!.id).eq("status", "active");
       return data ?? [];
     },
