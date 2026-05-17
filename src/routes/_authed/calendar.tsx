@@ -385,6 +385,7 @@ function MonthBlock({
     start: startOfWeek(startOfMonth(month), { weekStartsOn: 0 }),
     end: endOfWeek(endOfMonth(month), { weekStartsOn: 0 }),
   });
+  const daysByKey = useMemo(() => new Map(days.map((day) => [format(day, "yyyy-MM-dd"), day])), [days]);
   const draggingRef = useRef(false);
   const lastToggledRef = useRef<string | null>(null);
 
@@ -427,7 +428,17 @@ function MonthBlock({
           const preset = s ? presetFor(s, shiftLibrary, libById) : null;
           const isSelected = selectedDays.has(key);
 
-          const startPress = () => {
+          const selectDraggedDay = (clientX: number, clientY: number) => {
+            const target = document.elementFromPoint(clientX, clientY)?.closest<HTMLButtonElement>("[data-calendar-day]");
+            const nextKey = target?.dataset.dayKey;
+            if (!nextKey || lastToggledRef.current === nextKey) return;
+            const nextDate = daysByKey.get(nextKey);
+            if (!nextDate) return;
+            lastToggledRef.current = nextKey;
+            onSelectDay(nextDate);
+          };
+          const startPress = (e: React.PointerEvent<HTMLButtonElement>) => {
+            e.currentTarget.setPointerCapture(e.pointerId);
             draggingRef.current = true;
             lastToggledRef.current = key;
             onDayTap(d);
@@ -446,7 +457,10 @@ function MonthBlock({
           return (
             <button
               key={key}
+              data-calendar-day="true"
+              data-day-key={key}
               onPointerDown={startPress}
+              onPointerMove={(e) => draggingRef.current && selectDraggedDay(e.clientX, e.clientY)}
               onPointerEnter={onEnter}
               onPointerUp={cancelPress}
               onPointerLeave={cancelPress}
