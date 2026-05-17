@@ -90,6 +90,15 @@ function shiftHours(start: string, end: string): number {
   return mins / 60;
 }
 
+function textColorFor(hex: string) {
+  const value = hex.replace("#", "");
+  const r = parseInt(value.slice(0, 2), 16);
+  const g = parseInt(value.slice(2, 4), 16);
+  const b = parseInt(value.slice(4, 6), 16);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.62 ? "#1f2933" : "#ffffff";
+}
+
 function CalendarPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
@@ -101,6 +110,7 @@ function CalendarPage() {
   const [multiMode, setMultiMode] = useState(false);
   const [selectedDays, setSelectedDays] = useState<Set<string>>(new Set());
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [colorOverrides, setColorOverrides] = useState<ShiftColorOverrides>({});
 
   const today = new Date();
   const [monthsBack, setMonthsBack] = useState(2);
@@ -113,6 +123,19 @@ function CalendarPage() {
     return list;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [monthsBack, monthsForward]);
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem("nurse-grid-shift-colors");
+    if (saved) setColorOverrides(JSON.parse(saved) as ShiftColorOverrides);
+  }, []);
+
+  const shiftLibrary = useMemo(() => DEFAULT_SHIFT_LIBRARY.map((p) => ({
+    ...p,
+    bg: colorOverrides[p.id]?.bg ?? p.bg,
+    ink: colorOverrides[p.id]?.ink ?? p.ink,
+  })), [colorOverrides]);
+
+  const libById = useMemo(() => new Map(shiftLibrary.map((p) => [p.id, p])), [shiftLibrary]);
 
   const rangeStart = format(startOfMonth(months[0]), "yyyy-MM-dd");
   const rangeEnd = format(endOfMonth(months[months.length - 1]), "yyyy-MM-dd");
