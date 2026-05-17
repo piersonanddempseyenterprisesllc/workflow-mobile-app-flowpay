@@ -672,7 +672,7 @@ function MonthBlock({
   }, []);
 
   return (
-    <section className="pt-5 pb-2">
+    <section data-month={format(month, "yyyy-MM")} className="pt-5 pb-2">
       <div className="px-3 flex items-center justify-between mb-3">
         <h2 className="font-serif text-xl md:text-3xl">{format(month, "MMMM yyyy")}</h2>
         <div className="flex items-center gap-1 text-muted-foreground">
