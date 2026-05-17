@@ -888,9 +888,16 @@ function MonthBlock({
                   <span className="text-base md:text-xl font-semibold leading-none">
                     {format(d, "d")}
                   </span>
-                  <span className="text-[10px] md:text-xs font-bold mt-1 tracking-wide opacity-95">
-                    {preset.code}
-                  </span>
+                  {preset.icon && ICON_LIBRARY[preset.icon] ? (
+                    (() => {
+                      const Ico = ICON_LIBRARY[preset.icon];
+                      return <Ico className="w-3.5 h-3.5 md:w-4 md:h-4 mt-1 opacity-90" />;
+                    })()
+                  ) : (
+                    <span className="text-[10px] md:text-xs font-bold mt-1 tracking-wide opacity-95">
+                      {preset.code}
+                    </span>
+                  )}
                 </div>
               ) : (
                 <span
