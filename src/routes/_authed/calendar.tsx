@@ -226,13 +226,16 @@ function CalendarPage() {
           </div>
           <h1 className="font-serif text-2xl">Calendar</h1>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => (multiMode ? cancelMulti() : enterMultiFrom())}
-            className={`w-10 h-10 rounded-full flex items-center justify-center hover:bg-muted/60 ${multiMode ? "text-primary" : "text-foreground"}`}
-            aria-label="Multi-select"
+            className={`h-10 px-3 rounded-full flex items-center gap-1.5 text-sm font-medium transition-colors ${
+              multiMode ? "bg-primary text-primary-foreground" : "bg-muted/60 text-foreground hover:bg-muted"
+            }`}
+            aria-label="Select multiple days"
           >
-            <CheckSquare className="w-5 h-5" />
+            <CheckSquare className="w-4 h-4" />
+            <span className="hidden sm:inline">{multiMode ? "Done" : "Select days"}</span>
           </button>
           <button onClick={() => setOpenShare(true)} className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-muted/60 text-foreground">
             <Share2 className="w-5 h-5" />
@@ -271,6 +274,7 @@ function CalendarPage() {
             month={m}
             shiftMap={shiftMap}
             onDayTap={onDayTap}
+            onDayLongPress={enterMultiFrom}
             selectedDays={selectedDays}
             multiMode={multiMode}
           />
@@ -330,10 +334,11 @@ function CalendarPage() {
 }
 
 function MonthBlock({
-  month, shiftMap, onDayTap, selectedDays, multiMode,
+  month, shiftMap, onDayTap, onDayLongPress, selectedDays, multiMode,
 }: {
   month: Date; shiftMap: Map<string, Shift>;
-  onDayTap: (d: Date) => void; selectedDays: Set<string>; multiMode: boolean;
+  onDayTap: (d: Date) => void; onDayLongPress: (d: Date) => void;
+  selectedDays: Set<string>; multiMode: boolean;
 }) {
   const days = eachDayOfInterval({
     start: startOfWeek(startOfMonth(month), { weekStartsOn: 0 }),
@@ -368,11 +373,21 @@ function MonthBlock({
           const isToday = isSameDay(d, new Date());
           const preset = s ? presetFor(s) : null;
           const isSelected = selectedDays.has(key);
+          let pressTimer: ReturnType<typeof setTimeout> | null = null;
+          const startPress = () => {
+            if (multiMode) return;
+            pressTimer = setTimeout(() => { onDayLongPress(d); pressTimer = null; }, 400);
+          };
+          const cancelPress = () => { if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; } };
           return (
             <button
               key={key}
               onClick={() => onDayTap(d)}
-              className={`relative bg-background min-h-[68px] md:min-h-[96px] lg:min-h-[120px] flex flex-col items-center pt-2 pb-1 transition-all ${
+              onPointerDown={startPress}
+              onPointerUp={cancelPress}
+              onPointerLeave={cancelPress}
+              onPointerCancel={cancelPress}
+              className={`relative bg-background min-h-[68px] md:min-h-[96px] lg:min-h-[120px] flex flex-col items-center pt-2 pb-1 transition-all touch-manipulation select-none ${
                 inMonth ? "" : "opacity-30"
               } ${multiMode && isSelected ? "ring-2 ring-primary ring-inset z-10" : ""}`}
             >
