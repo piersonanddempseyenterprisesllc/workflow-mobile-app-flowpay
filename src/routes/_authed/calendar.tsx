@@ -334,16 +334,31 @@ function CalendarPage() {
 }
 
 function MonthBlock({
-  month, shiftMap, onDayTap, onDayLongPress, selectedDays, multiMode,
+  month, shiftMap, onDayTap, onDayLongPress, onDaySelectToggle, selectedDays, multiMode,
 }: {
   month: Date; shiftMap: Map<string, Shift>;
   onDayTap: (d: Date) => void; onDayLongPress: (d: Date) => void;
+  onDaySelectToggle: (d: Date) => void;
   selectedDays: Set<string>; multiMode: boolean;
 }) {
   const days = eachDayOfInterval({
     start: startOfWeek(startOfMonth(month), { weekStartsOn: 0 }),
     end: endOfWeek(endOfMonth(month), { weekStartsOn: 0 }),
   });
+  const pressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressedRef = useRef(false);
+  const draggingRef = useRef(false);
+  const lastToggledRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const up = () => { draggingRef.current = false; lastToggledRef.current = null; };
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", up);
+    return () => {
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", up);
+    };
+  }, []);
 
   return (
     <section className="pt-5 pb-2">
