@@ -16,7 +16,7 @@ import {
 } from "date-fns";
 import {
   Plus, List, Settings, Bell, Trash2, MapPin, Share2, CheckSquare, X,
-  Sun, Moon, Sunrise, Sunset, Briefcase, Coffee, Plane, Palmtree, Cake,
+  Sun, Moon, Sunrise, Sunset, Briefcase, Coffee, Plane, Umbrella, Cake,
   PartyPopper, Stethoscope, Smile, Heart, Calendar as CalendarIcon, Star, Palette,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
