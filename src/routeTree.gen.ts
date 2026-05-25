@@ -16,7 +16,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthedSocialRouteImport } from './routes/_authed/social'
 import { Route as AuthedProfileRouteImport } from './routes/_authed/profile'
 import { Route as AuthedHomeRouteImport } from './routes/_authed/home'
-import { Route as AuthedFlowpayRouteImport } from './routes/_authed/flowpay'
 import { Route as AuthedCalendarRouteImport } from './routes/_authed/calendar'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -53,11 +52,6 @@ const AuthedHomeRoute = AuthedHomeRouteImport.update({
   path: '/home',
   getParentRoute: () => AuthedRouteRoute,
 } as any)
-const AuthedFlowpayRoute = AuthedFlowpayRouteImport.update({
-  id: '/flowpay',
-  path: '/flowpay',
-  getParentRoute: () => AuthedRouteRoute,
-} as any)
 const AuthedCalendarRoute = AuthedCalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
@@ -69,7 +63,6 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/calendar': typeof AuthedCalendarRoute
-  '/flowpay': typeof AuthedFlowpayRoute
   '/home': typeof AuthedHomeRoute
   '/profile': typeof AuthedProfileRoute
   '/social': typeof AuthedSocialRoute
@@ -79,7 +72,6 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/calendar': typeof AuthedCalendarRoute
-  '/flowpay': typeof AuthedFlowpayRoute
   '/home': typeof AuthedHomeRoute
   '/profile': typeof AuthedProfileRoute
   '/social': typeof AuthedSocialRoute
@@ -91,7 +83,6 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authed/calendar': typeof AuthedCalendarRoute
-  '/_authed/flowpay': typeof AuthedFlowpayRoute
   '/_authed/home': typeof AuthedHomeRoute
   '/_authed/profile': typeof AuthedProfileRoute
   '/_authed/social': typeof AuthedSocialRoute
@@ -103,7 +94,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/calendar'
-    | '/flowpay'
     | '/home'
     | '/profile'
     | '/social'
@@ -113,7 +103,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/calendar'
-    | '/flowpay'
     | '/home'
     | '/profile'
     | '/social'
@@ -124,7 +113,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/_authed/calendar'
-    | '/_authed/flowpay'
     | '/_authed/home'
     | '/_authed/profile'
     | '/_authed/social'
@@ -188,13 +176,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedHomeRouteImport
       parentRoute: typeof AuthedRouteRoute
     }
-    '/_authed/flowpay': {
-      id: '/_authed/flowpay'
-      path: '/flowpay'
-      fullPath: '/flowpay'
-      preLoaderRoute: typeof AuthedFlowpayRouteImport
-      parentRoute: typeof AuthedRouteRoute
-    }
     '/_authed/calendar': {
       id: '/_authed/calendar'
       path: '/calendar'
@@ -207,7 +188,6 @@ declare module '@tanstack/react-router' {
 
 interface AuthedRouteRouteChildren {
   AuthedCalendarRoute: typeof AuthedCalendarRoute
-  AuthedFlowpayRoute: typeof AuthedFlowpayRoute
   AuthedHomeRoute: typeof AuthedHomeRoute
   AuthedProfileRoute: typeof AuthedProfileRoute
   AuthedSocialRoute: typeof AuthedSocialRoute
@@ -215,7 +195,6 @@ interface AuthedRouteRouteChildren {
 
 const AuthedRouteRouteChildren: AuthedRouteRouteChildren = {
   AuthedCalendarRoute: AuthedCalendarRoute,
-  AuthedFlowpayRoute: AuthedFlowpayRoute,
   AuthedHomeRoute: AuthedHomeRoute,
   AuthedProfileRoute: AuthedProfileRoute,
   AuthedSocialRoute: AuthedSocialRoute,
