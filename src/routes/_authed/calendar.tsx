@@ -609,6 +609,12 @@ function CalendarPage() {
     return m;
   }, [shifts]);
 
+  const paydayMap = useMemo(() => {
+    const m = new Map<string, Shift>();
+    for (const s of paydays) m.set(s.date, s);
+    return m;
+  }, [paydays]);
+
   function onScroll() {
     const el = scrollerRef.current;
     if (!el || loadingRef.current) return;
