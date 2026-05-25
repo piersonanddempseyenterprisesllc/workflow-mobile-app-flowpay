@@ -80,11 +80,32 @@ function SocialPage() {
     qc.invalidateQueries({ queryKey: ["sharedWith"] });
   }
 
+  async function inviteColleague() {
+    const url = window.location.origin + "/auth";
+    const shareData = { title: "Join me on Workflow", text: "I'm using Workflow to track shifts and share my calendar with coworkers. Join me:", url };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success("Invite link copied");
+      }
+    } catch {
+      // user dismissed
+    }
+  }
+
   return (
-    <div className="space-y-5">
-      <header>
-        <p className="text-xs uppercase tracking-widest text-muted-foreground">Coworkers</p>
-        <h1 className="font-serif text-3xl mt-1">Connect</h1>
+    <div className="space-y-5 pb-32">
+      <header className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground">Coworkers</p>
+          <h1 className="font-serif text-3xl mt-1">Compare</h1>
+          <p className="text-sm text-muted-foreground mt-1">See who's working and who's off.</p>
+        </div>
+        <Button onClick={inviteColleague} size="sm" className="rounded-full mt-1 shrink-0">
+          <UserPlus className="w-3.5 h-3.5 mr-1" />Invite
+        </Button>
       </header>
 
       <div className="soft-card p-3 flex items-center gap-2">

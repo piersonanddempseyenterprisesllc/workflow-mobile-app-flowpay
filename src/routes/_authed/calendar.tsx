@@ -50,8 +50,8 @@ type Shift = {
   title: string | null;
 };
 
-type Category = "work" | "vacation" | "event" | "appointment";
-const CATEGORIES: { id: Category; label: string }[] = [
+type Category = string;
+const BUILT_IN_CATEGORIES: { id: string; label: string }[] = [
   { id: "work", label: "Work" },
   { id: "vacation", label: "Vacation" },
   { id: "event", label: "Events" },
@@ -363,6 +363,9 @@ function CalendarPage() {
   const [activeCat, setActiveCat] = useState<Category>("work");
   const [selected, setSelected] = useState<Date | null>(null);
   const [openShare, setOpenShare] = useState(false);
+  const [customCats, setCustomCats] = useState<{ id: string; label: string }[]>([]);
+  const [addCatOpen, setAddCatOpen] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
 
   // Multi-select
   const [multiMode, setMultiMode] = useState(false);
@@ -370,6 +373,8 @@ function CalendarPage() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [colorOverrides, setColorOverrides] = useState<ShiftColorOverrides>({});
   const [themeId, setThemeId] = useState<string>("default");
+
+  const allCategories = useMemo(() => [...BUILT_IN_CATEGORIES, ...customCats], [customCats]);
 
   // Anchor "today" to mount-time start-of-month so month list stays accurate
   // across re-renders and grows symmetrically as the user scrolls.
@@ -406,7 +411,31 @@ function CalendarPage() {
     if (saved) setColorOverrides(JSON.parse(saved) as ShiftColorOverrides);
     const savedTheme = window.localStorage.getItem("nurse-grid-theme");
     if (savedTheme) setThemeId(savedTheme);
+    const savedCats = window.localStorage.getItem("workflow-custom-cats");
+    if (savedCats) {
+      try { setCustomCats(JSON.parse(savedCats)); } catch { /* ignore */ }
+    }
   }, []);
+
+  function addCustomCategory() {
+    const name = newCatName.trim();
+    if (!name) return;
+    const id = `custom-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now().toString(36)}`;
+    const next = [...customCats, { id, label: name }];
+    setCustomCats(next);
+    window.localStorage.setItem("workflow-custom-cats", JSON.stringify(next));
+    setNewCatName("");
+    setAddCatOpen(false);
+    setActiveCat(id);
+    toast.success(`Added "${name}" tab`);
+  }
+
+  function removeCustomCategory(id: string) {
+    const next = customCats.filter((c) => c.id !== id);
+    setCustomCats(next);
+    window.localStorage.setItem("workflow-custom-cats", JSON.stringify(next));
+    if (activeCat === id) setActiveCat("work");
+  }
 
   const activeTheme = useMemo(
     () => THEMES.find((t) => t.id === themeId) ?? THEMES[0],
@@ -650,24 +679,58 @@ function CalendarPage() {
       {/* Category tabs */}
       <div className="px-4 pb-3 border-b border-border/60">
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-          {CATEGORIES.map((c) => {
+          {allCategories.map((c) => {
             const active = activeCat === c.id;
+            const isCustom = c.id.startsWith("custom-");
             return (
               <button
                 key={c.id}
                 onClick={() => setActiveCat(c.id)}
+                onDoubleClick={() => isCustom && removeCustomCategory(c.id)}
                 className={`shrink-0 px-5 h-10 rounded-full text-sm font-medium transition-colors ${
                   active
                     ? "bg-foreground text-background"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
+                title={isCustom ? "Double-tap to remove" : undefined}
               >
                 {c.label}
               </button>
             );
           })}
+          <button
+            onClick={() => setAddCatOpen(true)}
+            className="shrink-0 w-10 h-10 rounded-full bg-muted/60 hover:bg-muted text-foreground flex items-center justify-center"
+            aria-label="Add custom tab"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
         </div>
       </div>
+
+      <Dialog open={addCatOpen} onOpenChange={setAddCatOpen}>
+        <DialogContent className="rounded-3xl max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-2xl">New tab</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Tab name</Label>
+              <Input
+                value={newCatName}
+                onChange={(e) => setNewCatName(e.target.value)}
+                placeholder="e.g. Training, On-call, Travel"
+                maxLength={24}
+                className="mt-1.5 h-11 rounded-xl"
+                autoFocus
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">Double-tap a custom tab later to remove it.</p>
+            <Button onClick={addCustomCategory} disabled={!newCatName.trim()} className="w-full h-11 rounded-xl">Add tab</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
 
       {/* Scrollable months */}
       <div ref={scrollerRef} onScroll={onScroll} className="flex-1 overflow-y-auto px-2 pb-32">
@@ -1073,7 +1136,7 @@ function ShiftPickerSheet({
         </div>
 
         <div className="space-y-5 mt-5 pb-6">
-          {CATEGORIES.map((c) => (
+          {BUILT_IN_CATEGORIES.map((c) => (
             <div key={c.id}>
               <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2 px-1">
                 {c.label}
