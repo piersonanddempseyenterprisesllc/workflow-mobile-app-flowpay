@@ -363,6 +363,9 @@ function CalendarPage() {
   const [activeCat, setActiveCat] = useState<Category>("work");
   const [selected, setSelected] = useState<Date | null>(null);
   const [openShare, setOpenShare] = useState(false);
+  const [customCats, setCustomCats] = useState<{ id: string; label: string }[]>([]);
+  const [addCatOpen, setAddCatOpen] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
 
   // Multi-select
   const [multiMode, setMultiMode] = useState(false);
@@ -370,6 +373,8 @@ function CalendarPage() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [colorOverrides, setColorOverrides] = useState<ShiftColorOverrides>({});
   const [themeId, setThemeId] = useState<string>("default");
+
+  const allCategories = useMemo(() => [...BUILT_IN_CATEGORIES, ...customCats], [customCats]);
 
   // Anchor "today" to mount-time start-of-month so month list stays accurate
   // across re-renders and grows symmetrically as the user scrolls.
