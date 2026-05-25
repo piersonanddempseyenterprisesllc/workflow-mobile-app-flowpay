@@ -18,6 +18,7 @@ import {
   Plus, List, Settings, Bell, Trash2, MapPin, Share2, CheckSquare, X,
   Sun, Moon, Sunrise, Sunset, Briefcase, Coffee, Plane, Umbrella, Cake,
   PartyPopper, Stethoscope, Smile, Heart, Calendar as CalendarIcon, Star, Palette,
+  DollarSign,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -56,6 +57,7 @@ const BUILT_IN_CATEGORIES: { id: string; label: string }[] = [
   { id: "vacation", label: "Vacation" },
   { id: "event", label: "Events" },
   { id: "appointment", label: "Appointments" },
+  { id: "payday", label: "Pay Day" },
 ];
 
 // NurseGrid-style shift library: code + colour + default times.
@@ -127,7 +129,7 @@ const ICON_LIBRARY: Record<string, React.ComponentType<{ className?: string }>> 
   sun: Sun, moon: Moon, sunrise: Sunrise, sunset: Sunset,
   briefcase: Briefcase, coffee: Coffee, plane: Plane, umbrella: Umbrella,
   cake: Cake, party: PartyPopper, stethoscope: Stethoscope, smile: Smile,
-  heart: Heart, calendar: CalendarIcon, star: Star,
+  heart: Heart, calendar: CalendarIcon, star: Star, dollar: DollarSign,
 };
 const ICON_KEYS = Object.keys(ICON_LIBRARY);
 
@@ -316,6 +318,18 @@ const DEFAULT_SHIFT_LIBRARY: ShiftPreset[] = [
     ink: "#fff",
     category: "appointment",
   },
+  // Pay Day — overlays onto any other event
+  {
+    id: "PAY",
+    code: "$",
+    label: "Pay Day",
+    start: "00:00",
+    end: "00:00",
+    bg: "#2E7D5B",
+    ink: "#fff",
+    category: "payday",
+    icon: "dollar",
+  },
 ];
 
 const DEFAULT_ICONS: Record<string, string> = {
@@ -323,7 +337,7 @@ const DEFAULT_ICONS: Record<string, string> = {
   OC: "briefcase", OFF: "coffee", OT: "star",
   PTO: "umbrella", VAC: "plane", SICK: "smile", HOL: "party",
   EVT: "calendar", BDAY: "cake", MTG: "briefcase",
-  DR: "stethoscope", DENT: "smile", APPT: "heart",
+  DR: "stethoscope", DENT: "smile", APPT: "heart", PAY: "dollar",
 };
 
 function presetFor(
@@ -560,6 +574,22 @@ function CalendarPage() {
     enabled: !!user,
   });
 
+  // Pay Day shifts are loaded independently so they can overlay any other category.
+  const { data: paydays = [] } = useQuery({
+    queryKey: ["paydays", user?.id, rangeStart, rangeEnd],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("shifts")
+        .select("*")
+        .eq("user_id", user!.id)
+        .eq("category", "payday")
+        .gte("date", rangeStart)
+        .lte("date", rangeEnd);
+      return (data ?? []) as Shift[];
+    },
+    enabled: !!user && activeCat !== "payday",
+  });
+
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
     queryFn: async () => {
@@ -578,6 +608,12 @@ function CalendarPage() {
     for (const s of shifts) m.set(s.date, s);
     return m;
   }, [shifts]);
+
+  const paydayMap = useMemo(() => {
+    const m = new Map<string, Shift>();
+    for (const s of paydays) m.set(s.date, s);
+    return m;
+  }, [paydays]);
 
   function onScroll() {
     const el = scrollerRef.current;
@@ -651,6 +687,7 @@ function CalendarPage() {
     cancelMulti();
     if (preset.category !== activeCat) setActiveCat(preset.category);
     qc.invalidateQueries({ queryKey: ["shifts"] });
+    qc.invalidateQueries({ queryKey: ["paydays"] });
   }
 
   async function deleteSelection() {
@@ -665,6 +702,7 @@ function CalendarPage() {
     toast.success(`Cleared ${selectedDays.size} day${selectedDays.size > 1 ? "s" : ""}`);
     cancelMulti();
     qc.invalidateQueries({ queryKey: ["shifts"] });
+    qc.invalidateQueries({ queryKey: ["paydays"] });
   }
 
   const initials = (profile?.full_name ?? user?.email ?? "U")
@@ -829,6 +867,7 @@ function CalendarPage() {
             key={format(m, "yyyy-MM")}
             month={m}
             shiftMap={shiftMap}
+            paydayMap={paydayMap}
             shiftLibrary={shiftLibrary}
             libById={libById}
             onDayTap={onDayTap}
@@ -897,7 +936,10 @@ function CalendarPage() {
         libById={libById}
         onColorChange={updateShiftColor}
         onClose={() => setSelected(null)}
-        onSaved={() => qc.invalidateQueries({ queryKey: ["shifts"] })}
+        onSaved={() => {
+          qc.invalidateQueries({ queryKey: ["shifts"] });
+          qc.invalidateQueries({ queryKey: ["paydays"] });
+        }}
         onAddToMore={(d) => enterMultiFrom(d)}
       />
 
@@ -909,6 +951,7 @@ function CalendarPage() {
 function MonthBlock({
   month,
   shiftMap,
+  paydayMap,
   shiftLibrary,
   libById,
   onDayTap,
@@ -919,6 +962,7 @@ function MonthBlock({
 }: {
   month: Date;
   shiftMap: Map<string, Shift>;
+  paydayMap: Map<string, Shift>;
   shiftLibrary: ShiftPreset[];
   libById: Map<string, ShiftPreset>;
   onDayTap: (d: Date) => void;
@@ -992,6 +1036,7 @@ function MonthBlock({
           const isToday = isSameDay(d, today);
           const preset = s ? presetFor(s, shiftLibrary, libById) : null;
           const isSelected = selectedDays.has(key);
+          const hasPayday = paydayMap.has(key);
 
           const selectDraggedDay = (clientX: number, clientY: number) => {
             const target = document
@@ -1064,6 +1109,15 @@ function MonthBlock({
                   }
                 >
                   {format(d, "d")}
+                </span>
+              )}
+              {hasPayday && (
+                <span
+                  aria-label="Pay day"
+                  title="Pay day"
+                  className="absolute top-1 right-1 z-10 w-4 h-4 md:w-5 md:h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow ring-1 ring-white/60"
+                >
+                  <DollarSign className="w-2.5 h-2.5 md:w-3 md:h-3" strokeWidth={3} />
                 </span>
               )}
             </button>
@@ -1176,6 +1230,7 @@ function ShiftPickerSheet({
       vacation: [],
       event: [],
       appointment: [],
+      payday: [],
     };
     for (const p of shiftLibrary) m[p.category].push(p);
     return m;
