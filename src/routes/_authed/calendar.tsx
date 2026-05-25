@@ -574,6 +574,22 @@ function CalendarPage() {
     enabled: !!user,
   });
 
+  // Pay Day shifts are loaded independently so they can overlay any other category.
+  const { data: paydays = [] } = useQuery({
+    queryKey: ["paydays", user?.id, rangeStart, rangeEnd],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("shifts")
+        .select("*")
+        .eq("user_id", user!.id)
+        .eq("category", "payday")
+        .gte("date", rangeStart)
+        .lte("date", rangeEnd);
+      return (data ?? []) as Shift[];
+    },
+    enabled: !!user && activeCat !== "payday",
+  });
+
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
     queryFn: async () => {
