@@ -57,6 +57,7 @@ const BUILT_IN_CATEGORIES: { id: string; label: string }[] = [
   { id: "vacation", label: "Vacation" },
   { id: "event", label: "Events" },
   { id: "appointment", label: "Appointments" },
+  { id: "payday", label: "Pay Day" },
 ];
 
 // NurseGrid-style shift library: code + colour + default times.
