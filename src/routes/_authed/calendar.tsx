@@ -714,7 +714,7 @@ function CalendarPage() {
             Today
           </button>
           <button
-            onClick={() => setSelected(new Date())}
+            onClick={() => setSelected(today)}
             className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-muted/60 text-foreground"
           >
             <Plus className="w-5 h-5" />
