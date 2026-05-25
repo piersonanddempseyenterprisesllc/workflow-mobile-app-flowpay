@@ -1021,12 +1021,16 @@ function MonthBlock({
       <div className="grid grid-cols-7 px-2 gap-px bg-border/40">
         {days.map((d) => {
           const key = format(d, "yyyy-MM-dd");
-          const s = shiftMap.get(key);
+          const dayShifts = shiftsByDate.get(key) ?? [];
           const inMonth = isSameMonth(d, month);
           const isToday = isSameDay(d, today);
-          const preset = s ? presetFor(s, shiftLibrary, libById) : null;
           const isSelected = selectedDays.has(key);
-          const hasPayday = paydayMap.has(key);
+          // Primary event fills the cell; remaining events render as chips.
+          const primary = dayShifts[0] ?? null;
+          const primaryPreset = primary ? presetFor(primary, shiftLibrary, libById) : null;
+          const extras = dayShifts.slice(1)
+            .map((s) => ({ shift: s, preset: presetFor(s, shiftLibrary, libById) }))
+            .filter((x): x is { shift: Shift; preset: ShiftPreset } => !!x.preset);
 
           const selectDraggedDay = (clientX: number, clientY: number) => {
             const target = document
@@ -1071,22 +1075,22 @@ function MonthBlock({
                 inMonth ? "" : "opacity-30"
               } ${multiMode && isSelected ? "ring-2 ring-primary ring-inset z-10" : ""}`}
             >
-              {s && preset ? (
+              {primary && primaryPreset ? (
                 <div
-                  className="absolute inset-0 flex flex-col items-center justify-center"
-                  style={{ backgroundColor: preset.bg, color: preset.ink }}
+                  className="absolute inset-0 flex flex-col items-center justify-start pt-2"
+                  style={{ backgroundColor: primaryPreset.bg, color: primaryPreset.ink }}
                 >
                   <span className="text-base md:text-xl font-semibold leading-none">
                     {format(d, "d")}
                   </span>
-                  {preset.icon && ICON_LIBRARY[preset.icon] ? (
+                  {primaryPreset.icon && ICON_LIBRARY[primaryPreset.icon] ? (
                     (() => {
-                      const Ico = ICON_LIBRARY[preset.icon];
+                      const Ico = ICON_LIBRARY[primaryPreset.icon];
                       return <Ico className="w-3.5 h-3.5 md:w-4 md:h-4 mt-1 opacity-90" />;
                     })()
                   ) : (
                     <span className="text-[10px] md:text-xs font-bold mt-1 tracking-wide opacity-95">
-                      {preset.code}
+                      {primaryPreset.code}
                     </span>
                   )}
                 </div>
@@ -1101,14 +1105,27 @@ function MonthBlock({
                   {format(d, "d")}
                 </span>
               )}
-              {hasPayday && (
-                <span
-                  aria-label="Pay day"
-                  title="Pay day"
-                  className="absolute top-1 right-1 z-10 w-4 h-4 md:w-5 md:h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow ring-1 ring-white/60"
-                >
-                  <DollarSign className="w-2.5 h-2.5 md:w-3 md:h-3" strokeWidth={3} />
-                </span>
+              {extras.length > 0 && (
+                <div className="absolute bottom-1 left-1 right-1 z-10 flex flex-wrap justify-center gap-0.5">
+                  {extras.slice(0, 3).map(({ shift, preset: p }) => {
+                    const Ico = p.icon ? ICON_LIBRARY[p.icon] : null;
+                    return (
+                      <span
+                        key={shift.id}
+                        title={p.label}
+                        className="inline-flex items-center justify-center min-w-[16px] h-4 md:min-w-[18px] md:h-[18px] px-1 rounded-full shadow ring-1 ring-white/60 text-[9px] md:text-[10px] font-bold leading-none"
+                        style={{ backgroundColor: p.bg, color: p.ink }}
+                      >
+                        {Ico ? <Ico className="w-2.5 h-2.5 md:w-3 md:h-3" strokeWidth={3} /> : p.code}
+                      </span>
+                    );
+                  })}
+                  {extras.length > 3 && (
+                    <span className="text-[9px] md:text-[10px] font-bold opacity-70">
+                      +{extras.length - 3}
+                    </span>
+                  )}
+                </div>
               )}
             </button>
           );
