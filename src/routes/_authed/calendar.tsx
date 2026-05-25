@@ -318,6 +318,18 @@ const DEFAULT_SHIFT_LIBRARY: ShiftPreset[] = [
     ink: "#fff",
     category: "appointment",
   },
+  // Pay Day — overlays onto any other event
+  {
+    id: "PAY",
+    code: "$",
+    label: "Pay Day",
+    start: "00:00",
+    end: "00:00",
+    bg: "#2E7D5B",
+    ink: "#fff",
+    category: "payday",
+    icon: "dollar",
+  },
 ];
 
 const DEFAULT_ICONS: Record<string, string> = {
