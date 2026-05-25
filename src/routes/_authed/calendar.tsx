@@ -942,8 +942,7 @@ function CalendarPage() {
 
 function MonthBlock({
   month,
-  shiftMap,
-  paydayMap,
+  shiftsByDate,
   shiftLibrary,
   libById,
   onDayTap,
@@ -953,8 +952,7 @@ function MonthBlock({
   today,
 }: {
   month: Date;
-  shiftMap: Map<string, Shift>;
-  paydayMap: Map<string, Shift>;
+  shiftsByDate: Map<string, Shift[]>;
   shiftLibrary: ShiftPreset[];
   libById: Map<string, ShiftPreset>;
   onDayTap: (d: Date) => void;
