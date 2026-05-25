@@ -794,6 +794,7 @@ function CalendarPage() {
             }}
             selectedDays={selectedDays}
             multiMode={multiMode}
+            today={today}
           />
         ))}
       </div>
