@@ -46,9 +46,37 @@ function ProfilePage() {
 
   const [addProfOpen, setAddProfOpen] = useState(false);
   const [addWorkOpen, setAddWorkOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
 
-  async function saveBasics() {
-    const { error } = await supabase.from("profiles").update({
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    if (file.size > 5 * 1024 * 1024) return toast.error("Image must be under 5MB");
+    if (!file.type.startsWith("image/")) return toast.error("Please select an image");
+
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, {
+        cacheControl: "3600",
+        upsert: true,
+      });
+      if (upErr) throw upErr;
+      const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
+      const { error: updErr } = await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", user.id);
+      if (updErr) throw updErr;
+      toast.success("Profile photo updated");
+      qc.invalidateQueries({ queryKey: ["profile-full"] });
+      qc.invalidateQueries({ queryKey: ["profile"] });
+    } catch (err: any) {
+      toast.error(err.message || "Upload failed");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
       full_name: name, hourly_rate: Number(rate) || 0,
     }).eq("id", user!.id);
     if (error) return toast.error(error.message);
