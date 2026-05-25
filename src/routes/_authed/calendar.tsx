@@ -337,7 +337,7 @@ const DEFAULT_ICONS: Record<string, string> = {
   OC: "briefcase", OFF: "coffee", OT: "star",
   PTO: "umbrella", VAC: "plane", SICK: "smile", HOL: "party",
   EVT: "calendar", BDAY: "cake", MTG: "briefcase",
-  DR: "stethoscope", DENT: "smile", APPT: "heart",
+  DR: "stethoscope", DENT: "smile", APPT: "heart", PAY: "dollar",
 };
 
 function presetFor(
