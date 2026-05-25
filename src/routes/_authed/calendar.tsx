@@ -674,12 +674,13 @@ function CalendarPage() {
       location: null,
       notes: null,
     }));
-    // Upsert: delete existing rows for those dates (same category) then insert
+    // Additive: only replace the SAME preset on the same dates so users can
+    // stack multiple different events on one day (e.g. Work Day + Pay Day).
     await supabase
       .from("shifts")
       .delete()
       .eq("user_id", user.id)
-      .eq("category", preset.category)
+      .eq("type", preset.id)
       .in("date", Array.from(selectedDays));
     const { error } = await supabase.from("shifts").insert(rows);
     if (error) return toast.error(error.message);
