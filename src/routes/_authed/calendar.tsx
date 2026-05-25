@@ -1230,6 +1230,7 @@ function ShiftPickerSheet({
       vacation: [],
       event: [],
       appointment: [],
+      payday: [],
     };
     for (const p of shiftLibrary) m[p.category].push(p);
     return m;
