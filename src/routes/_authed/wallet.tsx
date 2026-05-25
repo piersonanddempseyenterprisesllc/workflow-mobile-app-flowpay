@@ -157,7 +157,9 @@ function SendDialog({ open, onClose, balance }: { open: boolean; onClose: () => 
     if (!n || n <= 0) return toast.error("Enter an amount");
     if (n > balance) return toast.error("Insufficient balance");
     setBusy(true);
-    const { error } = await supabase.rpc("send_money", { p_receiver: to, p_amount: n, p_note: note || null });
+    const args: { p_receiver: string; p_amount: number; p_note?: string } = { p_receiver: to, p_amount: n };
+    if (note) args.p_note = note;
+    const { error } = await supabase.rpc("send_money", args);
     setBusy(false);
     if (error) return toast.error(error.message);
     toast.success(`Sent $${n.toFixed(2)}`);
