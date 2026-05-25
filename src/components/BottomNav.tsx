@@ -1,12 +1,11 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Calendar, Users, Briefcase, BookOpen, Inbox } from "lucide-react";
+import { Calendar, Users, BookOpen, Inbox } from "lucide-react";
 
 const items = [
   { to: "/calendar", label: "Calendar", icon: Calendar },
   { to: "/social", label: "Colleagues", icon: Users },
-  { to: "/flowpay", label: "Find Jobs", icon: Briefcase },
   { to: "/home", label: "Learn", icon: BookOpen },
-  { to: "/profile", label: "Inbox", icon: Inbox },
+  { to: "/profile", label: "Profile", icon: Inbox },
 ] as const;
 
 export function BottomNav() {
