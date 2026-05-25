@@ -70,7 +70,7 @@ function AuthPage() {
         <div className="text-center mb-10">
           <img src={workflowLogo} alt="Workflow logo" width={112} height={112} className="mx-auto mb-5 w-20 h-20 rounded-2xl" />
           <h1 className="font-serif text-4xl text-foreground">Workflow</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Shifts, coworkers & FlowPay — one calm space.</p>
+          <p className="mt-2 text-sm text-muted-foreground">Shifts and coworkers — one calm space.</p>
         </div>
 
         <div className="soft-card p-6">
