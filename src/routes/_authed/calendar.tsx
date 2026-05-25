@@ -674,7 +674,13 @@ function CalendarPage() {
               <span className="text-xs font-semibold text-accent-foreground">{initials}</span>
             )}
           </div>
-          <h1 className="font-serif text-2xl">Calendar</h1>
+          <div>
+            <h1 className="font-serif text-2xl leading-tight">Calendar</h1>
+            <p className="text-[11px] text-muted-foreground">
+              {format(today, "EEEE, MMMM d, yyyy")}
+              {tzLabel ? ` · ${tzLabel}` : ""}
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <button
