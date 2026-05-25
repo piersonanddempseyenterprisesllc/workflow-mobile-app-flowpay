@@ -457,6 +457,50 @@ function CalendarPage() {
     }
   }, []);
 
+  // Sync prefs with server so colors/themes/custom tabs persist across devices.
+  const prefsLoadedRef = useRef(false);
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("user_calendar_prefs")
+        .select("theme_id, color_overrides, custom_categories")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (!cancelled && !error && data) {
+        if (data.theme_id) setThemeId(data.theme_id);
+        if (data.color_overrides) setColorOverrides(data.color_overrides as ShiftColorOverrides);
+        if (Array.isArray(data.custom_categories)) {
+          setCustomCats(data.custom_categories as { id: string; label: string }[]);
+        }
+      }
+      prefsLoadedRef.current = true;
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!user?.id || !prefsLoadedRef.current) return;
+    const t = setTimeout(() => {
+      supabase
+        .from("user_calendar_prefs")
+        .upsert(
+          {
+            user_id: user.id,
+            theme_id: themeId,
+            color_overrides: colorOverrides,
+            custom_categories: customCats,
+          },
+          { onConflict: "user_id" },
+        )
+        .then(({ error }) => {
+          if (error) console.error("Failed to save calendar prefs", error);
+        });
+    }, 400);
+    return () => clearTimeout(t);
+  }, [user?.id, themeId, colorOverrides, customCats]);
+
   function addCustomCategory() {
     const name = newCatName.trim();
     if (!name) return;
