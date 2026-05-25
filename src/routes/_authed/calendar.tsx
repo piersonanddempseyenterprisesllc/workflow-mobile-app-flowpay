@@ -1116,7 +1116,7 @@ function MonthBlock({
                         className="inline-flex items-center justify-center min-w-[16px] h-4 md:min-w-[18px] md:h-[18px] px-1 rounded-full shadow ring-1 ring-white/60 text-[9px] md:text-[10px] font-bold leading-none"
                         style={{ backgroundColor: p.bg, color: p.ink }}
                       >
-                        {Ico ? <Ico className="w-2.5 h-2.5 md:w-3 md:h-3" strokeWidth={3} /> : p.code}
+                        {Ico ? <Ico className="w-2.5 h-2.5 md:w-3 md:h-3" /> : p.code}
                       </span>
                     );
                   })}
