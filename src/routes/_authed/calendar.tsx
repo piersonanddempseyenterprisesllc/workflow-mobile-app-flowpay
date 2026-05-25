@@ -559,35 +559,18 @@ function CalendarPage() {
   const rangeEnd = format(endOfMonth(months[months.length - 1]), "yyyy-MM-dd");
 
   const { data: shifts = [] } = useQuery({
-    queryKey: ["shifts", user?.id, rangeStart, rangeEnd, activeCat],
+    queryKey: ["shifts", user?.id, rangeStart, rangeEnd],
     queryFn: async () => {
       const { data } = await supabase
         .from("shifts")
         .select("*")
         .eq("user_id", user!.id)
-        .eq("category", activeCat)
         .gte("date", rangeStart)
         .lte("date", rangeEnd)
         .order("date");
       return (data ?? []) as Shift[];
     },
     enabled: !!user,
-  });
-
-  // Pay Day shifts are loaded independently so they can overlay any other category.
-  const { data: paydays = [] } = useQuery({
-    queryKey: ["paydays", user?.id, rangeStart, rangeEnd],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("shifts")
-        .select("*")
-        .eq("user_id", user!.id)
-        .eq("category", "payday")
-        .gte("date", rangeStart)
-        .lte("date", rangeEnd);
-      return (data ?? []) as Shift[];
-    },
-    enabled: !!user && activeCat !== "payday",
   });
 
   const { data: profile } = useQuery({
@@ -603,17 +586,26 @@ function CalendarPage() {
     enabled: !!user,
   });
 
-  const shiftMap = useMemo(() => {
-    const m = new Map<string, Shift>();
-    for (const s of shifts) m.set(s.date, s);
+  // All shifts grouped by date so a day can show multiple stacked events.
+  const shiftsByDate = useMemo(() => {
+    const m = new Map<string, Shift[]>();
+    for (const s of shifts) {
+      const list = m.get(s.date);
+      if (list) list.push(s);
+      else m.set(s.date, [s]);
+    }
     return m;
   }, [shifts]);
 
-  const paydayMap = useMemo(() => {
+  // First event of the active category on a given day — used by the single-day dialog.
+  const shiftMap = useMemo(() => {
     const m = new Map<string, Shift>();
-    for (const s of paydays) m.set(s.date, s);
+    for (const s of shifts) {
+      if (s.category !== activeCat) continue;
+      if (!m.has(s.date)) m.set(s.date, s);
+    }
     return m;
-  }, [paydays]);
+  }, [shifts, activeCat]);
 
   function onScroll() {
     const el = scrollerRef.current;
@@ -674,12 +666,13 @@ function CalendarPage() {
       location: null,
       notes: null,
     }));
-    // Upsert: delete existing rows for those dates (same category) then insert
+    // Additive: only replace the SAME preset on the same dates so users can
+    // stack multiple different events on one day (e.g. Work Day + Pay Day).
     await supabase
       .from("shifts")
       .delete()
       .eq("user_id", user.id)
-      .eq("category", preset.category)
+      .eq("type", preset.id)
       .in("date", Array.from(selectedDays));
     const { error } = await supabase.from("shifts").insert(rows);
     if (error) return toast.error(error.message);
@@ -866,8 +859,7 @@ function CalendarPage() {
           <MonthBlock
             key={format(m, "yyyy-MM")}
             month={m}
-            shiftMap={shiftMap}
-            paydayMap={paydayMap}
+            shiftsByDate={shiftsByDate}
             shiftLibrary={shiftLibrary}
             libById={libById}
             onDayTap={onDayTap}
@@ -950,8 +942,7 @@ function CalendarPage() {
 
 function MonthBlock({
   month,
-  shiftMap,
-  paydayMap,
+  shiftsByDate,
   shiftLibrary,
   libById,
   onDayTap,
@@ -961,8 +952,7 @@ function MonthBlock({
   today,
 }: {
   month: Date;
-  shiftMap: Map<string, Shift>;
-  paydayMap: Map<string, Shift>;
+  shiftsByDate: Map<string, Shift[]>;
   shiftLibrary: ShiftPreset[];
   libById: Map<string, ShiftPreset>;
   onDayTap: (d: Date) => void;
@@ -1031,12 +1021,16 @@ function MonthBlock({
       <div className="grid grid-cols-7 px-2 gap-px bg-border/40">
         {days.map((d) => {
           const key = format(d, "yyyy-MM-dd");
-          const s = shiftMap.get(key);
+          const dayShifts = shiftsByDate.get(key) ?? [];
           const inMonth = isSameMonth(d, month);
           const isToday = isSameDay(d, today);
-          const preset = s ? presetFor(s, shiftLibrary, libById) : null;
           const isSelected = selectedDays.has(key);
-          const hasPayday = paydayMap.has(key);
+          // Primary event fills the cell; remaining events render as chips.
+          const primary = dayShifts[0] ?? null;
+          const primaryPreset = primary ? presetFor(primary, shiftLibrary, libById) : null;
+          const extras = dayShifts.slice(1)
+            .map((s) => ({ shift: s, preset: presetFor(s, shiftLibrary, libById) }))
+            .filter((x): x is { shift: Shift; preset: ShiftPreset } => !!x.preset);
 
           const selectDraggedDay = (clientX: number, clientY: number) => {
             const target = document
@@ -1081,22 +1075,22 @@ function MonthBlock({
                 inMonth ? "" : "opacity-30"
               } ${multiMode && isSelected ? "ring-2 ring-primary ring-inset z-10" : ""}`}
             >
-              {s && preset ? (
+              {primary && primaryPreset ? (
                 <div
-                  className="absolute inset-0 flex flex-col items-center justify-center"
-                  style={{ backgroundColor: preset.bg, color: preset.ink }}
+                  className="absolute inset-0 flex flex-col items-center justify-start pt-2"
+                  style={{ backgroundColor: primaryPreset.bg, color: primaryPreset.ink }}
                 >
                   <span className="text-base md:text-xl font-semibold leading-none">
                     {format(d, "d")}
                   </span>
-                  {preset.icon && ICON_LIBRARY[preset.icon] ? (
+                  {primaryPreset.icon && ICON_LIBRARY[primaryPreset.icon] ? (
                     (() => {
-                      const Ico = ICON_LIBRARY[preset.icon];
+                      const Ico = ICON_LIBRARY[primaryPreset.icon];
                       return <Ico className="w-3.5 h-3.5 md:w-4 md:h-4 mt-1 opacity-90" />;
                     })()
                   ) : (
                     <span className="text-[10px] md:text-xs font-bold mt-1 tracking-wide opacity-95">
-                      {preset.code}
+                      {primaryPreset.code}
                     </span>
                   )}
                 </div>
@@ -1111,14 +1105,27 @@ function MonthBlock({
                   {format(d, "d")}
                 </span>
               )}
-              {hasPayday && (
-                <span
-                  aria-label="Pay day"
-                  title="Pay day"
-                  className="absolute top-1 right-1 z-10 w-4 h-4 md:w-5 md:h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow ring-1 ring-white/60"
-                >
-                  <DollarSign className="w-2.5 h-2.5 md:w-3 md:h-3" strokeWidth={3} />
-                </span>
+              {extras.length > 0 && (
+                <div className="absolute bottom-1 left-1 right-1 z-10 flex flex-wrap justify-center gap-0.5">
+                  {extras.slice(0, 3).map(({ shift, preset: p }) => {
+                    const Ico = p.icon ? ICON_LIBRARY[p.icon] : null;
+                    return (
+                      <span
+                        key={shift.id}
+                        title={p.label}
+                        className="inline-flex items-center justify-center min-w-[16px] h-4 md:min-w-[18px] md:h-[18px] px-1 rounded-full shadow ring-1 ring-white/60 text-[9px] md:text-[10px] font-bold leading-none"
+                        style={{ backgroundColor: p.bg, color: p.ink }}
+                      >
+                        {Ico ? <Ico className="w-2.5 h-2.5 md:w-3 md:h-3" /> : p.code}
+                      </span>
+                    );
+                  })}
+                  {extras.length > 3 && (
+                    <span className="text-[9px] md:text-[10px] font-bold opacity-70">
+                      +{extras.length - 3}
+                    </span>
+                  )}
+                </div>
               )}
             </button>
           );
