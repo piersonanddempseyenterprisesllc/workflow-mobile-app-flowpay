@@ -865,6 +865,7 @@ function CalendarPage() {
             key={format(m, "yyyy-MM")}
             month={m}
             shiftMap={shiftMap}
+            paydayMap={paydayMap}
             shiftLibrary={shiftLibrary}
             libById={libById}
             onDayTap={onDayTap}
