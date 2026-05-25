@@ -376,14 +376,54 @@ function CalendarPage() {
 
   const allCategories = useMemo(() => [...BUILT_IN_CATEGORIES, ...customCats], [customCats]);
 
-  // Anchor "today" to mount-time start-of-month so month list stays accurate
-  // across re-renders and grows symmetrically as the user scrolls.
+  // Live "today" — recomputed at midnight in the device's local timezone, and
+  // whenever the tab regains focus (handles laptops waking, timezone changes,
+  // or the app sitting open across midnight).
+  const [today, setToday] = useState<Date>(() => new Date());
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    const schedule = () => {
+      const now = new Date();
+      const nextMidnight = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1,
+        0, 0, 5, // 5s past midnight to be safe
+      );
+      timer = setTimeout(() => {
+        setToday(new Date());
+        schedule();
+      }, nextMidnight.getTime() - now.getTime());
+    };
+    const refresh = () => setToday(new Date());
+    schedule();
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, []);
+
+  // Anchor month-list to start-of-month of today so it stays symmetric.
   const anchorRef = useRef<Date>(startOfMonth(new Date()));
   const [monthsBack, setMonthsBack] = useState(6);
   const [monthsForward, setMonthsForward] = useState(12);
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const loadingRef = useRef(false);
   const didInitialScrollRef = useRef(false);
+
+  const tzLabel = useMemo(() => {
+    try {
+      const parts = new Intl.DateTimeFormat(undefined, {
+        timeZoneName: "short",
+      }).formatToParts(today);
+      return parts.find((p) => p.type === "timeZoneName")?.value ?? "";
+    } catch {
+      return "";
+    }
+  }, [today]);
 
   const months = useMemo(() => {
     const list: Date[] = [];
@@ -634,7 +674,13 @@ function CalendarPage() {
               <span className="text-xs font-semibold text-accent-foreground">{initials}</span>
             )}
           </div>
-          <h1 className="font-serif text-2xl">Calendar</h1>
+          <div>
+            <h1 className="font-serif text-2xl leading-tight">Calendar</h1>
+            <p className="text-[11px] text-muted-foreground">
+              {format(today, "EEEE, MMMM d, yyyy")}
+              {tzLabel ? ` · ${tzLabel}` : ""}
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -659,7 +705,7 @@ function CalendarPage() {
             onClick={() => {
               const el = scrollerRef.current;
               const t = el?.querySelector<HTMLElement>(
-                `[data-month="${format(new Date(), "yyyy-MM")}"]`,
+                `[data-month="${format(today, "yyyy-MM")}"]`,
               );
               if (el && t) el.scrollTo({ top: t.offsetTop - 8, behavior: "smooth" });
             }}
@@ -668,7 +714,7 @@ function CalendarPage() {
             Today
           </button>
           <button
-            onClick={() => setSelected(new Date())}
+            onClick={() => setSelected(today)}
             className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-muted/60 text-foreground"
           >
             <Plus className="w-5 h-5" />
@@ -748,6 +794,7 @@ function CalendarPage() {
             }}
             selectedDays={selectedDays}
             multiMode={multiMode}
+            today={today}
           />
         ))}
       </div>
@@ -824,6 +871,7 @@ function MonthBlock({
   onSelectDay,
   selectedDays,
   multiMode,
+  today,
 }: {
   month: Date;
   shiftMap: Map<string, Shift>;
@@ -833,6 +881,7 @@ function MonthBlock({
   onSelectDay: (d: Date) => void;
   selectedDays: Set<string>;
   multiMode: boolean;
+  today: Date;
 }) {
   const days = eachDayOfInterval({
     start: startOfWeek(startOfMonth(month), { weekStartsOn: 0 }),
@@ -896,7 +945,7 @@ function MonthBlock({
           const key = format(d, "yyyy-MM-dd");
           const s = shiftMap.get(key);
           const inMonth = isSameMonth(d, month);
-          const isToday = isSameDay(d, new Date());
+          const isToday = isSameDay(d, today);
           const preset = s ? presetFor(s, shiftLibrary, libById) : null;
           const isSelected = selectedDays.has(key);
 
