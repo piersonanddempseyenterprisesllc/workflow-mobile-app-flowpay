@@ -702,6 +702,7 @@ function CalendarPage() {
     toast.success(`Cleared ${selectedDays.size} day${selectedDays.size > 1 ? "s" : ""}`);
     cancelMulti();
     qc.invalidateQueries({ queryKey: ["shifts"] });
+    qc.invalidateQueries({ queryKey: ["paydays"] });
   }
 
   const initials = (profile?.full_name ?? user?.email ?? "U")
