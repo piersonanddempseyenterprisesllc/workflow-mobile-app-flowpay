@@ -411,7 +411,31 @@ function CalendarPage() {
     if (saved) setColorOverrides(JSON.parse(saved) as ShiftColorOverrides);
     const savedTheme = window.localStorage.getItem("nurse-grid-theme");
     if (savedTheme) setThemeId(savedTheme);
+    const savedCats = window.localStorage.getItem("workflow-custom-cats");
+    if (savedCats) {
+      try { setCustomCats(JSON.parse(savedCats)); } catch { /* ignore */ }
+    }
   }, []);
+
+  function addCustomCategory() {
+    const name = newCatName.trim();
+    if (!name) return;
+    const id = `custom-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now().toString(36)}`;
+    const next = [...customCats, { id, label: name }];
+    setCustomCats(next);
+    window.localStorage.setItem("workflow-custom-cats", JSON.stringify(next));
+    setNewCatName("");
+    setAddCatOpen(false);
+    setActiveCat(id);
+    toast.success(`Added "${name}" tab`);
+  }
+
+  function removeCustomCategory(id: string) {
+    const next = customCats.filter((c) => c.id !== id);
+    setCustomCats(next);
+    window.localStorage.setItem("workflow-custom-cats", JSON.stringify(next));
+    if (activeCat === id) setActiveCat("work");
+  }
 
   const activeTheme = useMemo(
     () => THEMES.find((t) => t.id === themeId) ?? THEMES[0],
