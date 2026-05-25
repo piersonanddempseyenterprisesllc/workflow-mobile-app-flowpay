@@ -129,7 +129,7 @@ const ICON_LIBRARY: Record<string, React.ComponentType<{ className?: string }>> 
   sun: Sun, moon: Moon, sunrise: Sunrise, sunset: Sunset,
   briefcase: Briefcase, coffee: Coffee, plane: Plane, umbrella: Umbrella,
   cake: Cake, party: PartyPopper, stethoscope: Stethoscope, smile: Smile,
-  heart: Heart, calendar: CalendarIcon, star: Star,
+  heart: Heart, calendar: CalendarIcon, star: Star, dollar: DollarSign,
 };
 const ICON_KEYS = Object.keys(ICON_LIBRARY);
 
