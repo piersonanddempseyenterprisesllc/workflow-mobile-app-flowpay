@@ -353,6 +353,33 @@ export type Database = {
           },
         ]
       }
+      user_calendar_prefs: {
+        Row: {
+          color_overrides: Json
+          created_at: string
+          custom_categories: Json
+          theme_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color_overrides?: Json
+          created_at?: string
+          custom_categories?: Json
+          theme_id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color_overrides?: Json
+          created_at?: string
+          custom_categories?: Json
+          theme_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       wallets: {
         Row: {
           balance: number
