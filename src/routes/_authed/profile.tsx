@@ -103,8 +103,32 @@ function ProfilePage() {
 
   return (
     <div className="space-y-5">
-      <header>
-        <p className="text-xs uppercase tracking-widest text-muted-foreground">Account</p>
+      <header className="flex flex-col items-center text-center">
+        <div className="relative">
+          <Avatar className="w-24 h-24 border-2 border-border">
+            <AvatarImage src={profile?.avatar_url ?? undefined} alt={name || "Profile"} />
+            <AvatarFallback className="text-2xl font-serif">
+              {(name || user?.email || "?").charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            aria-label="Change profile photo"
+            className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:opacity-90 disabled:opacity-50"
+          >
+            {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleAvatarUpload}
+          />
+        </div>
+        <p className="text-xs uppercase tracking-widest text-muted-foreground mt-4">Account</p>
         <h1 className="font-serif text-3xl mt-1">Profile</h1>
         <p className="text-sm text-muted-foreground mt-1">{user?.email}</p>
       </header>
