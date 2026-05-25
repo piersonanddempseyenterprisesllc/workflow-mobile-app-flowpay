@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { LogOut, Plus, Check } from "lucide-react";
+import { LogOut, Plus, Check, Camera, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authed/profile")({ component: ProfilePage });
@@ -45,6 +46,37 @@ function ProfilePage() {
 
   const [addProfOpen, setAddProfOpen] = useState(false);
   const [addWorkOpen, setAddWorkOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    if (file.size > 5 * 1024 * 1024) return toast.error("Image must be under 5MB");
+    if (!file.type.startsWith("image/")) return toast.error("Please select an image");
+
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, {
+        cacheControl: "3600",
+        upsert: true,
+      });
+      if (upErr) throw upErr;
+      const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
+      const { error: updErr } = await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", user.id);
+      if (updErr) throw updErr;
+      toast.success("Profile photo updated");
+      qc.invalidateQueries({ queryKey: ["profile-full"] });
+      qc.invalidateQueries({ queryKey: ["profile"] });
+    } catch (err: any) {
+      toast.error(err.message || "Upload failed");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
 
   async function saveBasics() {
     const { error } = await supabase.from("profiles").update({
@@ -71,8 +103,32 @@ function ProfilePage() {
 
   return (
     <div className="space-y-5">
-      <header>
-        <p className="text-xs uppercase tracking-widest text-muted-foreground">Account</p>
+      <header className="flex flex-col items-center text-center">
+        <div className="relative">
+          <Avatar className="w-24 h-24 border-2 border-border">
+            <AvatarImage src={profile?.avatar_url ?? undefined} alt={name || "Profile"} />
+            <AvatarFallback className="text-2xl font-serif">
+              {(name || user?.email || "?").charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            aria-label="Change profile photo"
+            className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:opacity-90 disabled:opacity-50"
+          >
+            {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleAvatarUpload}
+          />
+        </div>
+        <p className="text-xs uppercase tracking-widest text-muted-foreground mt-4">Account</p>
         <h1 className="font-serif text-3xl mt-1">Profile</h1>
         <p className="text-sm text-muted-foreground mt-1">{user?.email}</p>
       </header>
