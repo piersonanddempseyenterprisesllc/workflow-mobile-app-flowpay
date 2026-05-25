@@ -679,24 +679,58 @@ function CalendarPage() {
       {/* Category tabs */}
       <div className="px-4 pb-3 border-b border-border/60">
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-          {CATEGORIES.map((c) => {
+          {allCategories.map((c) => {
             const active = activeCat === c.id;
+            const isCustom = c.id.startsWith("custom-");
             return (
               <button
                 key={c.id}
                 onClick={() => setActiveCat(c.id)}
+                onDoubleClick={() => isCustom && removeCustomCategory(c.id)}
                 className={`shrink-0 px-5 h-10 rounded-full text-sm font-medium transition-colors ${
                   active
                     ? "bg-foreground text-background"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
+                title={isCustom ? "Double-tap to remove" : undefined}
               >
                 {c.label}
               </button>
             );
           })}
+          <button
+            onClick={() => setAddCatOpen(true)}
+            className="shrink-0 w-10 h-10 rounded-full bg-muted/60 hover:bg-muted text-foreground flex items-center justify-center"
+            aria-label="Add custom tab"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
         </div>
       </div>
+
+      <Dialog open={addCatOpen} onOpenChange={setAddCatOpen}>
+        <DialogContent className="rounded-3xl max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-2xl">New tab</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Tab name</Label>
+              <Input
+                value={newCatName}
+                onChange={(e) => setNewCatName(e.target.value)}
+                placeholder="e.g. Training, On-call, Travel"
+                maxLength={24}
+                className="mt-1.5 h-11 rounded-xl"
+                autoFocus
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">Double-tap a custom tab later to remove it.</p>
+            <Button onClick={addCustomCategory} disabled={!newCatName.trim()} className="w-full h-11 rounded-xl">Add tab</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
 
       {/* Scrollable months */}
       <div ref={scrollerRef} onScroll={onScroll} className="flex-1 overflow-y-auto px-2 pb-32">
