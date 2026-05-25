@@ -942,7 +942,7 @@ function MonthBlock({
           const key = format(d, "yyyy-MM-dd");
           const s = shiftMap.get(key);
           const inMonth = isSameMonth(d, month);
-          const isToday = isSameDay(d, new Date());
+          const isToday = isSameDay(d, today);
           const preset = s ? presetFor(s, shiftLibrary, libById) : null;
           const isSelected = selectedDays.has(key);
 
