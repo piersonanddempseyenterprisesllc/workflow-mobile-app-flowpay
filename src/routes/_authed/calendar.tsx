@@ -1106,6 +1106,15 @@ function MonthBlock({
                   {format(d, "d")}
                 </span>
               )}
+              {hasPayday && (
+                <span
+                  aria-label="Pay day"
+                  title="Pay day"
+                  className="absolute top-1 right-1 z-10 w-4 h-4 md:w-5 md:h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow ring-1 ring-white/60"
+                >
+                  <DollarSign className="w-2.5 h-2.5 md:w-3 md:h-3" strokeWidth={3} />
+                </span>
+              )}
             </button>
           );
         })}
