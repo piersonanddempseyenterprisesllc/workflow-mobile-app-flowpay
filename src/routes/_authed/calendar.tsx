@@ -859,8 +859,7 @@ function CalendarPage() {
           <MonthBlock
             key={format(m, "yyyy-MM")}
             month={m}
-            shiftMap={shiftMap}
-            paydayMap={paydayMap}
+            shiftsByDate={shiftsByDate}
             shiftLibrary={shiftLibrary}
             libById={libById}
             onDayTap={onDayTap}
