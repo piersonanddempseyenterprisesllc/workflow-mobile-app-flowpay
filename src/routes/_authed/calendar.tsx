@@ -871,6 +871,7 @@ function MonthBlock({
   onSelectDay,
   selectedDays,
   multiMode,
+  today,
 }: {
   month: Date;
   shiftMap: Map<string, Shift>;
@@ -880,6 +881,7 @@ function MonthBlock({
   onSelectDay: (d: Date) => void;
   selectedDays: Set<string>;
   multiMode: boolean;
+  today: Date;
 }) {
   const days = eachDayOfInterval({
     start: startOfWeek(startOfMonth(month), { weekStartsOn: 0 }),
