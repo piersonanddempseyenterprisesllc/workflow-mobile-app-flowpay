@@ -936,7 +936,10 @@ function CalendarPage() {
         libById={libById}
         onColorChange={updateShiftColor}
         onClose={() => setSelected(null)}
-        onSaved={() => qc.invalidateQueries({ queryKey: ["shifts"] })}
+        onSaved={() => {
+          qc.invalidateQueries({ queryKey: ["shifts"] });
+          qc.invalidateQueries({ queryKey: ["paydays"] });
+        }}
         onAddToMore={(d) => enterMultiFrom(d)}
       />
 
