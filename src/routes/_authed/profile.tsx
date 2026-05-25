@@ -77,6 +77,9 @@ function ProfilePage() {
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }
+
+  async function saveBasics() {
+    const { error } = await supabase.from("profiles").update({
       full_name: name, hourly_rate: Number(rate) || 0,
     }).eq("id", user!.id);
     if (error) return toast.error(error.message);
