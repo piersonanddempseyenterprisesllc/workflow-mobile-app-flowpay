@@ -138,7 +138,7 @@ function FriendPicker({ value, onChange }: { value: string; onChange: (v: string
         {friends.map((f) => {
           const p = f.profiles as { id: string; full_name: string | null } | null;
           if (!p) return null;
-          return <SelectItem key={p.id} value={p.id}>{p.full_name || "Unnamed"}</SelectItem>;
+          return <SelectItem key={p.id} value={p.id}>{p.full_name ?? "Unnamed"}</SelectItem>;
         })}
       </SelectContent>
     </Select>
