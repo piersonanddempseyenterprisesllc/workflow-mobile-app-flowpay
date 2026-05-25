@@ -705,7 +705,7 @@ function CalendarPage() {
             onClick={() => {
               const el = scrollerRef.current;
               const t = el?.querySelector<HTMLElement>(
-                `[data-month="${format(new Date(), "yyyy-MM")}"]`,
+                `[data-month="${format(today, "yyyy-MM")}"]`,
               );
               if (el && t) el.scrollTo({ top: t.offsetTop - 8, behavior: "smooth" });
             }}
