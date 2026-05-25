@@ -1031,6 +1031,7 @@ function MonthBlock({
           const isToday = isSameDay(d, today);
           const preset = s ? presetFor(s, shiftLibrary, libById) : null;
           const isSelected = selectedDays.has(key);
+          const hasPayday = paydayMap.has(key);
 
           const selectDraggedDay = (clientX: number, clientY: number) => {
             const target = document
