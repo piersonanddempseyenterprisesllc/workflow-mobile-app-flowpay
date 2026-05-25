@@ -1,5 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Calendar, Users, Briefcase, BookOpen, Inbox } from "lucide-react";
+import { Calendar, Users, BookOpen, Inbox } from "lucide-react";
 
 const items = [
   { to: "/calendar", label: "Calendar", icon: Calendar },
