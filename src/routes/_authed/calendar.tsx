@@ -559,35 +559,18 @@ function CalendarPage() {
   const rangeEnd = format(endOfMonth(months[months.length - 1]), "yyyy-MM-dd");
 
   const { data: shifts = [] } = useQuery({
-    queryKey: ["shifts", user?.id, rangeStart, rangeEnd, activeCat],
+    queryKey: ["shifts", user?.id, rangeStart, rangeEnd],
     queryFn: async () => {
       const { data } = await supabase
         .from("shifts")
         .select("*")
         .eq("user_id", user!.id)
-        .eq("category", activeCat)
         .gte("date", rangeStart)
         .lte("date", rangeEnd)
         .order("date");
       return (data ?? []) as Shift[];
     },
     enabled: !!user,
-  });
-
-  // Pay Day shifts are loaded independently so they can overlay any other category.
-  const { data: paydays = [] } = useQuery({
-    queryKey: ["paydays", user?.id, rangeStart, rangeEnd],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("shifts")
-        .select("*")
-        .eq("user_id", user!.id)
-        .eq("category", "payday")
-        .gte("date", rangeStart)
-        .lte("date", rangeEnd);
-      return (data ?? []) as Shift[];
-    },
-    enabled: !!user && activeCat !== "payday",
   });
 
   const { data: profile } = useQuery({
