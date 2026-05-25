@@ -586,17 +586,26 @@ function CalendarPage() {
     enabled: !!user,
   });
 
-  const shiftMap = useMemo(() => {
-    const m = new Map<string, Shift>();
-    for (const s of shifts) m.set(s.date, s);
+  // All shifts grouped by date so a day can show multiple stacked events.
+  const shiftsByDate = useMemo(() => {
+    const m = new Map<string, Shift[]>();
+    for (const s of shifts) {
+      const list = m.get(s.date);
+      if (list) list.push(s);
+      else m.set(s.date, [s]);
+    }
     return m;
   }, [shifts]);
 
-  const paydayMap = useMemo(() => {
+  // First event of the active category on a given day — used by the single-day dialog.
+  const shiftMap = useMemo(() => {
     const m = new Map<string, Shift>();
-    for (const s of paydays) m.set(s.date, s);
+    for (const s of shifts) {
+      if (s.category !== activeCat) continue;
+      if (!m.has(s.date)) m.set(s.date, s);
+    }
     return m;
-  }, [paydays]);
+  }, [shifts, activeCat]);
 
   function onScroll() {
     const el = scrollerRef.current;
