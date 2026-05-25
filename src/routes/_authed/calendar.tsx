@@ -1073,7 +1073,7 @@ function ShiftPickerSheet({
         </div>
 
         <div className="space-y-5 mt-5 pb-6">
-          {CATEGORIES.map((c) => (
+          {BUILT_IN_CATEGORIES.map((c) => (
             <div key={c.id}>
               <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2 px-1">
                 {c.label}
