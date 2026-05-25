@@ -376,14 +376,54 @@ function CalendarPage() {
 
   const allCategories = useMemo(() => [...BUILT_IN_CATEGORIES, ...customCats], [customCats]);
 
-  // Anchor "today" to mount-time start-of-month so month list stays accurate
-  // across re-renders and grows symmetrically as the user scrolls.
+  // Live "today" — recomputed at midnight in the device's local timezone, and
+  // whenever the tab regains focus (handles laptops waking, timezone changes,
+  // or the app sitting open across midnight).
+  const [today, setToday] = useState<Date>(() => new Date());
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    const schedule = () => {
+      const now = new Date();
+      const nextMidnight = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1,
+        0, 0, 5, // 5s past midnight to be safe
+      );
+      timer = setTimeout(() => {
+        setToday(new Date());
+        schedule();
+      }, nextMidnight.getTime() - now.getTime());
+    };
+    const refresh = () => setToday(new Date());
+    schedule();
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, []);
+
+  // Anchor month-list to start-of-month of today so it stays symmetric.
   const anchorRef = useRef<Date>(startOfMonth(new Date()));
   const [monthsBack, setMonthsBack] = useState(6);
   const [monthsForward, setMonthsForward] = useState(12);
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const loadingRef = useRef(false);
   const didInitialScrollRef = useRef(false);
+
+  const tzLabel = useMemo(() => {
+    try {
+      const parts = new Intl.DateTimeFormat(undefined, {
+        timeZoneName: "short",
+      }).formatToParts(today);
+      return parts.find((p) => p.type === "timeZoneName")?.value ?? "";
+    } catch {
+      return "";
+    }
+  }, [today]);
 
   const months = useMemo(() => {
     const list: Date[] = [];
