@@ -687,6 +687,7 @@ function CalendarPage() {
     cancelMulti();
     if (preset.category !== activeCat) setActiveCat(preset.category);
     qc.invalidateQueries({ queryKey: ["shifts"] });
+    qc.invalidateQueries({ queryKey: ["paydays"] });
   }
 
   async function deleteSelection() {
