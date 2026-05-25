@@ -50,8 +50,8 @@ type Shift = {
   title: string | null;
 };
 
-type Category = "work" | "vacation" | "event" | "appointment";
-const CATEGORIES: { id: Category; label: string }[] = [
+type Category = string;
+const BUILT_IN_CATEGORIES: { id: string; label: string }[] = [
   { id: "work", label: "Work" },
   { id: "vacation", label: "Vacation" },
   { id: "event", label: "Events" },
