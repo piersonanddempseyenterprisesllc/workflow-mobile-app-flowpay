@@ -419,18 +419,18 @@ function SendDialog({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Send money</DialogTitle>
-          <DialogDescription>1% platform fee · friends only</DialogDescription>
+          <DialogDescription>1% platform fee · send to anyone</DialogDescription>
         </DialogHeader>
         {!recipient ? (
           <div className="space-y-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input className="pl-9" placeholder="Search friends" value={q} onChange={(e) => setQ(e.target.value)} />
+              <Input className="pl-9" placeholder="Search people" value={q} onChange={(e) => setQ(e.target.value)} />
             </div>
             <div className="max-h-72 overflow-y-auto -mx-1 px-1">
               {filtered.length === 0 ? (
                 <div className="py-8 text-center text-sm text-muted-foreground">
-                  {friends.length === 0 ? "Add friends in Compare first." : "No matches."}
+                  {friends.length === 0 ? "No other users yet." : "No matches."}
                 </div>
               ) : filtered.map((f) => (
                 <button
