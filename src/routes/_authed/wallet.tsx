@@ -222,7 +222,7 @@ function WalletPage() {
         {txs.length === 0 ? (
           <div className="soft-card p-6 text-center">
             <div className="font-serif text-lg">No activity yet</div>
-            <p className="text-sm text-muted-foreground mt-1">Send money to a friend to get started.</p>
+            <p className="text-sm text-muted-foreground mt-1">Send money to anyone to get started.</p>
           </div>
         ) : (
           <div className="soft-card divide-y divide-border/60">
