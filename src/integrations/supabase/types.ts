@@ -298,29 +298,35 @@ export type Database = {
         Row: {
           amount: number
           created_at: string
+          fee: number
           id: string
           note: string | null
           receiver_id: string
           sender_id: string
           status: string
+          type: string
         }
         Insert: {
           amount: number
           created_at?: string
+          fee?: number
           id?: string
           note?: string | null
           receiver_id: string
           sender_id: string
           status?: string
+          type?: string
         }
         Update: {
           amount?: number
           created_at?: string
+          fee?: number
           id?: string
           note?: string | null
           receiver_id?: string
           sender_id?: string
           status?: string
+          type?: string
         }
         Relationships: [
           {
@@ -471,7 +477,15 @@ export type Database = {
       }
     }
     Functions: {
+      approve_payment_request: {
+        Args: { p_request_id: string }
+        Returns: string
+      }
       block_user: { Args: { p_target: string }; Returns: undefined }
+      decline_payment_request: {
+        Args: { p_request_id: string }
+        Returns: undefined
+      }
       send_money: {
         Args: { p_amount: number; p_note?: string; p_receiver: string }
         Returns: string
