@@ -11,6 +11,8 @@ import workflowLogo from "@/assets/workflow-logo.png";
 
 export const Route = createFileRoute("/auth")({ component: AuthPage });
 
+const USERNAME_RE = /^[A-Za-z0-9_]{3,20}$/;
+
 function AuthPage() {
   const { user } = useAuth();
   const nav = useNavigate();
@@ -18,21 +20,49 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
+  const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken" | "invalid">("idle");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => { if (user) nav({ to: "/calendar" }); }, [user, nav]);
+
+  useEffect(() => {
+    if (mode !== "signup") return;
+    const u = username.trim();
+    if (!u) { setUsernameStatus("idle"); return; }
+    if (!USERNAME_RE.test(u)) { setUsernameStatus("invalid"); return; }
+    setUsernameStatus("checking");
+    const t = setTimeout(async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id")
+        .ilike("username", u)
+        .maybeSingle();
+      if (error) { setUsernameStatus("idle"); return; }
+      setUsernameStatus(data ? "taken" : "available");
+    }, 350);
+    return () => clearTimeout(t);
+  }, [username, mode]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     try {
       if (mode === "signup") {
+        const u = username.trim();
+        if (!USERNAME_RE.test(u)) throw new Error("Username must be 3–20 letters, numbers, or underscores");
+        if (usernameStatus === "taken") throw new Error("That username is taken");
         const { error } = await supabase.auth.signUp({
           email, password,
-          options: { data: { full_name: name }, emailRedirectTo: `${window.location.origin}/calendar` },
+          options: { data: { full_name: name, username: u }, emailRedirectTo: `${window.location.origin}/calendar` },
         });
-        if (error) throw error;
+        if (error) {
+          if (/profiles_username_lower_unique|duplicate key/i.test(error.message)) {
+            throw new Error("That username is taken");
+          }
+          throw error;
+        }
         toast.success("Welcome to Workflow");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -44,6 +74,7 @@ function AuthPage() {
       setLoading(false);
     }
   }
+
 
   async function handleForgotPassword() {
     if (!email) {
@@ -87,10 +118,38 @@ function AuthPage() {
 
           <form onSubmit={submit} className="space-y-4">
             {mode === "signup" && (
-              <div>
-                <Label htmlFor="name">Full name</Label>
-                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required className="mt-1.5 h-12 rounded-xl" />
-              </div>
+              <>
+                <div>
+                  <Label htmlFor="name">Full name</Label>
+                  <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required className="mt-1.5 h-12 rounded-xl" />
+                </div>
+                <div>
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value.replace(/\s/g, ""))}
+                    required
+                    minLength={3}
+                    maxLength={20}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    placeholder="yourname"
+                    className="mt-1.5 h-12 rounded-xl"
+                  />
+                  <p className={`mt-1 text-xs ${
+                    usernameStatus === "taken" || usernameStatus === "invalid" ? "text-destructive" :
+                    usernameStatus === "available" ? "text-primary" : "text-muted-foreground"
+                  }`}>
+                    {usernameStatus === "checking" && "Checking…"}
+                    {usernameStatus === "available" && "Username is available"}
+                    {usernameStatus === "taken" && "That username is taken"}
+                    {usernameStatus === "invalid" && "3–20 letters, numbers, or underscores"}
+                    {usernameStatus === "idle" && "3–20 letters, numbers, or underscores"}
+                  </p>
+                </div>
+              </>
             )}
             <div>
               <Label htmlFor="email">Email</Label>

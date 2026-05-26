@@ -163,6 +163,7 @@ export type Database = {
           id: string
           profession_id: string | null
           updated_at: string
+          username: string | null
           workplace_id: string | null
         }
         Insert: {
@@ -173,6 +174,7 @@ export type Database = {
           id: string
           profession_id?: string | null
           updated_at?: string
+          username?: string | null
           workplace_id?: string | null
         }
         Update: {
@@ -183,6 +185,7 @@ export type Database = {
           id?: string
           profession_id?: string | null
           updated_at?: string
+          username?: string | null
           workplace_id?: string | null
         }
         Relationships: [
