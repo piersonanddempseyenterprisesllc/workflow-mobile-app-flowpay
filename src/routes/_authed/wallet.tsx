@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { ArrowUpRight, ArrowDownLeft, Plus, Check, X, Loader2, Send, HandCoins, Search, Info } from "lucide-react";
 import { toast } from "sonner";
+import { WalletTopupCheckout } from "@/components/WalletTopupCheckout";
 
 export const Route = createFileRoute("/_authed/wallet")({ component: WalletPage });
 
