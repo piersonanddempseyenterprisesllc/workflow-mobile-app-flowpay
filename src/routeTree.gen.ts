@@ -18,6 +18,8 @@ import { Route as AuthedSocialRouteImport } from './routes/_authed/social'
 import { Route as AuthedProfileRouteImport } from './routes/_authed/profile'
 import { Route as AuthedMessagesRouteImport } from './routes/_authed/messages'
 import { Route as AuthedCalendarRouteImport } from './routes/_authed/calendar'
+import { Route as AuthedWalletReturnRouteImport } from './routes/_authed/wallet.return'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -63,6 +65,17 @@ const AuthedCalendarRoute = AuthedCalendarRouteImport.update({
   path: '/calendar',
   getParentRoute: () => AuthedRouteRoute,
 } as any)
+const AuthedWalletReturnRoute = AuthedWalletReturnRouteImport.update({
+  id: '/return',
+  path: '/return',
+  getParentRoute: () => AuthedWalletRoute,
+} as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -72,7 +85,9 @@ export interface FileRoutesByFullPath {
   '/messages': typeof AuthedMessagesRoute
   '/profile': typeof AuthedProfileRoute
   '/social': typeof AuthedSocialRoute
-  '/wallet': typeof AuthedWalletRoute
+  '/wallet': typeof AuthedWalletRouteWithChildren
+  '/wallet/return': typeof AuthedWalletReturnRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -82,7 +97,9 @@ export interface FileRoutesByTo {
   '/messages': typeof AuthedMessagesRoute
   '/profile': typeof AuthedProfileRoute
   '/social': typeof AuthedSocialRoute
-  '/wallet': typeof AuthedWalletRoute
+  '/wallet': typeof AuthedWalletRouteWithChildren
+  '/wallet/return': typeof AuthedWalletReturnRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -94,7 +111,9 @@ export interface FileRoutesById {
   '/_authed/messages': typeof AuthedMessagesRoute
   '/_authed/profile': typeof AuthedProfileRoute
   '/_authed/social': typeof AuthedSocialRoute
-  '/_authed/wallet': typeof AuthedWalletRoute
+  '/_authed/wallet': typeof AuthedWalletRouteWithChildren
+  '/_authed/wallet/return': typeof AuthedWalletReturnRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -107,6 +126,8 @@ export interface FileRouteTypes {
     | '/profile'
     | '/social'
     | '/wallet'
+    | '/wallet/return'
+    | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -117,6 +138,8 @@ export interface FileRouteTypes {
     | '/profile'
     | '/social'
     | '/wallet'
+    | '/wallet/return'
+    | '/api/public/payments/webhook'
   id:
     | '__root__'
     | '/'
@@ -128,6 +151,8 @@ export interface FileRouteTypes {
     | '/_authed/profile'
     | '/_authed/social'
     | '/_authed/wallet'
+    | '/_authed/wallet/return'
+    | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -135,6 +160,7 @@ export interface RootRouteChildren {
   AuthedRouteRoute: typeof AuthedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -202,15 +228,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedCalendarRouteImport
       parentRoute: typeof AuthedRouteRoute
     }
+    '/_authed/wallet/return': {
+      id: '/_authed/wallet/return'
+      path: '/return'
+      fullPath: '/wallet/return'
+      preLoaderRoute: typeof AuthedWalletReturnRouteImport
+      parentRoute: typeof AuthedWalletRoute
+    }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
+
+interface AuthedWalletRouteChildren {
+  AuthedWalletReturnRoute: typeof AuthedWalletReturnRoute
+}
+
+const AuthedWalletRouteChildren: AuthedWalletRouteChildren = {
+  AuthedWalletReturnRoute: AuthedWalletReturnRoute,
+}
+
+const AuthedWalletRouteWithChildren = AuthedWalletRoute._addFileChildren(
+  AuthedWalletRouteChildren,
+)
 
 interface AuthedRouteRouteChildren {
   AuthedCalendarRoute: typeof AuthedCalendarRoute
   AuthedMessagesRoute: typeof AuthedMessagesRoute
   AuthedProfileRoute: typeof AuthedProfileRoute
   AuthedSocialRoute: typeof AuthedSocialRoute
-  AuthedWalletRoute: typeof AuthedWalletRoute
+  AuthedWalletRoute: typeof AuthedWalletRouteWithChildren
 }
 
 const AuthedRouteRouteChildren: AuthedRouteRouteChildren = {
@@ -218,7 +270,7 @@ const AuthedRouteRouteChildren: AuthedRouteRouteChildren = {
   AuthedMessagesRoute: AuthedMessagesRoute,
   AuthedProfileRoute: AuthedProfileRoute,
   AuthedSocialRoute: AuthedSocialRoute,
-  AuthedWalletRoute: AuthedWalletRoute,
+  AuthedWalletRoute: AuthedWalletRouteWithChildren,
 }
 
 const AuthedRouteRouteWithChildren = AuthedRouteRoute._addFileChildren(
@@ -230,6 +282,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthedRouteRoute: AuthedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
