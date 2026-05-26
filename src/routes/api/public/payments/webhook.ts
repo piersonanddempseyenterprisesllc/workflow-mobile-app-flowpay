@@ -11,7 +11,7 @@ async function handleCheckoutCompleted(session: any) {
 
   const { error } = await supabaseAdmin.rpc("credit_wallet_from_topup", {
     p_session_id: sessionId,
-    p_payment_intent_id: paymentIntentId,
+    p_payment_intent_id: paymentIntentId ?? "",
   });
   if (error) {
     console.error("credit_wallet_from_topup failed", error);
