@@ -419,7 +419,7 @@ function SendDialog({
     const { error } = await supabase.rpc("send_money", {
       p_receiver: recipient.id,
       p_amount: parsed.data,
-      p_note: note.trim().slice(0, 140) || null,
+      p_note: note.trim().slice(0, 140) || undefined,
     });
     setLoading(false);
     if (error) return toast.error(error.message);
