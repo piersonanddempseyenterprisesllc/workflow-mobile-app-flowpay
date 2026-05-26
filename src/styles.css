@@ -117,7 +117,7 @@
     margin-inline: auto;
     min-height: 100dvh;
     position: relative;
-    padding-bottom: 6rem;
+    padding-bottom: calc(6.5rem + env(safe-area-inset-bottom));
   }
   @media (min-width: 768px) {
     .app-shell { max-width: 760px; }
