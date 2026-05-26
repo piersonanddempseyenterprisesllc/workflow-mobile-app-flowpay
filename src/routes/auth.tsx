@@ -118,10 +118,38 @@ function AuthPage() {
 
           <form onSubmit={submit} className="space-y-4">
             {mode === "signup" && (
-              <div>
-                <Label htmlFor="name">Full name</Label>
-                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required className="mt-1.5 h-12 rounded-xl" />
-              </div>
+              <>
+                <div>
+                  <Label htmlFor="name">Full name</Label>
+                  <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required className="mt-1.5 h-12 rounded-xl" />
+                </div>
+                <div>
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value.replace(/\s/g, ""))}
+                    required
+                    minLength={3}
+                    maxLength={20}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    placeholder="yourname"
+                    className="mt-1.5 h-12 rounded-xl"
+                  />
+                  <p className={`mt-1 text-xs ${
+                    usernameStatus === "taken" || usernameStatus === "invalid" ? "text-destructive" :
+                    usernameStatus === "available" ? "text-primary" : "text-muted-foreground"
+                  }`}>
+                    {usernameStatus === "checking" && "Checking…"}
+                    {usernameStatus === "available" && "Username is available"}
+                    {usernameStatus === "taken" && "That username is taken"}
+                    {usernameStatus === "invalid" && "3–20 letters, numbers, or underscores"}
+                    {usernameStatus === "idle" && "3–20 letters, numbers, or underscores"}
+                  </p>
+                </div>
+              </>
             )}
             <div>
               <Label htmlFor="email">Email</Label>
