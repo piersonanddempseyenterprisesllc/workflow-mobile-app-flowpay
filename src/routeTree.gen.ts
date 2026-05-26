@@ -13,6 +13,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthedRouteRouteImport } from './routes/_authed/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthedWalletRouteImport } from './routes/_authed/wallet'
 import { Route as AuthedSocialRouteImport } from './routes/_authed/social'
 import { Route as AuthedProfileRouteImport } from './routes/_authed/profile'
 import { Route as AuthedMessagesRouteImport } from './routes/_authed/messages'
@@ -36,6 +37,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthedWalletRoute = AuthedWalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => AuthedRouteRoute,
 } as any)
 const AuthedSocialRoute = AuthedSocialRouteImport.update({
   id: '/social',
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/messages': typeof AuthedMessagesRoute
   '/profile': typeof AuthedProfileRoute
   '/social': typeof AuthedSocialRoute
+  '/wallet': typeof AuthedWalletRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -75,6 +82,7 @@ export interface FileRoutesByTo {
   '/messages': typeof AuthedMessagesRoute
   '/profile': typeof AuthedProfileRoute
   '/social': typeof AuthedSocialRoute
+  '/wallet': typeof AuthedWalletRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -86,6 +94,7 @@ export interface FileRoutesById {
   '/_authed/messages': typeof AuthedMessagesRoute
   '/_authed/profile': typeof AuthedProfileRoute
   '/_authed/social': typeof AuthedSocialRoute
+  '/_authed/wallet': typeof AuthedWalletRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -97,6 +106,7 @@ export interface FileRouteTypes {
     | '/messages'
     | '/profile'
     | '/social'
+    | '/wallet'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/messages'
     | '/profile'
     | '/social'
+    | '/wallet'
   id:
     | '__root__'
     | '/'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/_authed/messages'
     | '/_authed/profile'
     | '/_authed/social'
+    | '/_authed/wallet'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -155,6 +167,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authed/wallet': {
+      id: '/_authed/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof AuthedWalletRouteImport
+      parentRoute: typeof AuthedRouteRoute
+    }
     '/_authed/social': {
       id: '/_authed/social'
       path: '/social'
@@ -191,6 +210,7 @@ interface AuthedRouteRouteChildren {
   AuthedMessagesRoute: typeof AuthedMessagesRoute
   AuthedProfileRoute: typeof AuthedProfileRoute
   AuthedSocialRoute: typeof AuthedSocialRoute
+  AuthedWalletRoute: typeof AuthedWalletRoute
 }
 
 const AuthedRouteRouteChildren: AuthedRouteRouteChildren = {
@@ -198,6 +218,7 @@ const AuthedRouteRouteChildren: AuthedRouteRouteChildren = {
   AuthedMessagesRoute: AuthedMessagesRoute,
   AuthedProfileRoute: AuthedProfileRoute,
   AuthedSocialRoute: AuthedSocialRoute,
+  AuthedWalletRoute: AuthedWalletRoute,
 }
 
 const AuthedRouteRouteWithChildren = AuthedRouteRoute._addFileChildren(

@@ -1,10 +1,11 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Calendar, Users, MessageCircle, User } from "lucide-react";
+import { Calendar, Users, MessageCircle, Wallet, User } from "lucide-react";
 
 const items = [
   { to: "/calendar", label: "Calendar", icon: Calendar },
   { to: "/social", label: "Compare", icon: Users },
   { to: "/messages", label: "Messages", icon: MessageCircle },
+  { to: "/wallet", label: "Wallet", icon: Wallet },
   { to: "/profile", label: "Profile", icon: User },
 ] as const;
 
