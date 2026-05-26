@@ -186,6 +186,7 @@ function WalletPage() {
 
   return (
     <div className="pb-6">
+      <PaymentTestModeBanner />
       <header className="pt-1 pb-5">
         <h1 className="font-serif text-3xl">Wallet</h1>
         <p className="text-sm text-muted-foreground mt-1">Move money between friends, instantly.</p>
