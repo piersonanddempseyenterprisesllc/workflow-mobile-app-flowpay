@@ -640,26 +640,88 @@ function RequestDialog({
 }
 
 function AddMoneyDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+  const [amount, setAmount] = useState<string>("25");
+  const [checkoutAmount, setCheckoutAmount] = useState<number | null>(null);
+
+  const presets = [10, 25, 50, 100, 250, 500];
+  const cents = Math.round((parseFloat(amount) || 0) * 100);
+  const validAmount = cents >= 100 && cents <= 500_000;
+
+  // Reset on close
+  useEffect(() => {
+    if (!open) {
+      setCheckoutAmount(null);
+      setAmount("25");
+    }
+  }, [open]);
+
+  const start = () => {
+    if (!validAmount) return;
+    setCheckoutAmount(cents);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Add money</DialogTitle>
-          <DialogDescription>Top up your Workflow Wallet from a bank or card.</DialogDescription>
+          <DialogDescription>
+            {checkoutAmount === null
+              ? "Top up your Workflow Wallet with a debit card, credit card, or bank."
+              : `Paying ${money(checkoutAmount / 100)} — your balance updates the moment payment clears.`}
+          </DialogDescription>
         </DialogHeader>
-        <div className="rounded-2xl bg-muted/60 p-5 text-center">
-          <div className="w-12 h-12 rounded-full bg-gold/20 text-gold-foreground flex items-center justify-center mx-auto mb-3">
-            <Plus className="w-5 h-5" />
+
+        {checkoutAmount === null ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-2">
+              {presets.map((p) => (
+                <Button
+                  key={p}
+                  type="button"
+                  variant={parseFloat(amount) === p ? "default" : "outline"}
+                  onClick={() => setAmount(String(p))}
+                >
+                  ${p}
+                </Button>
+              ))}
+            </div>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+              <Input
+                type="number"
+                inputMode="decimal"
+                min={1}
+                max={5000}
+                step="0.01"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="pl-7 text-lg h-12"
+                placeholder="0.00"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+              <Info className="w-3 h-3" /> Min $1.00 — max $5,000.00 per top-up.
+            </p>
+            <DialogFooter>
+              <Button className="w-full h-11" disabled={!validAmount} onClick={start}>
+                Continue to payment
+              </Button>
+            </DialogFooter>
           </div>
-          <div className="font-serif text-lg">Bank top-ups coming soon</div>
-          <p className="text-sm text-muted-foreground mt-1">
-            We're finishing payment-processor verification. You'll be the first to know when real top-ups go live.
-          </p>
-        </div>
-        <DialogFooter>
-          <Button className="w-full" onClick={() => onOpenChange(false)}>Got it</Button>
-        </DialogFooter>
+        ) : (
+          <div className="space-y-3">
+            <WalletTopupCheckout
+              amountInCents={checkoutAmount}
+              returnUrl={`${window.location.origin}/wallet/return?session_id={CHECKOUT_SESSION_ID}`}
+            />
+            <Button variant="ghost" className="w-full" onClick={() => setCheckoutAmount(null)}>
+              Change amount
+            </Button>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
 }
+
