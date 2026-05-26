@@ -23,7 +23,14 @@ function AuthedLayout() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="app-shell px-4 pt-6 pb-0">
+      <div
+        className="app-shell px-4 pb-0"
+        style={{
+          paddingTop: "max(env(safe-area-inset-top), 1.25rem)",
+          paddingLeft: "max(env(safe-area-inset-left), 1rem)",
+          paddingRight: "max(env(safe-area-inset-right), 1rem)",
+        }}
+      >
         <Outlet />
       </div>
       <BottomNav />
