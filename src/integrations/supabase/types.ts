@@ -386,6 +386,42 @@ export type Database = {
         }
         Relationships: []
       }
+      wallet_topups: {
+        Row: {
+          amount_cents: number
+          completed_at: string | null
+          created_at: string
+          environment: string
+          id: string
+          status: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          completed_at?: string | null
+          created_at?: string
+          environment?: string
+          id?: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          completed_at?: string | null
+          created_at?: string
+          environment?: string
+          id?: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       wallets: {
         Row: {
           balance: number
@@ -482,6 +518,10 @@ export type Database = {
         Returns: string
       }
       block_user: { Args: { p_target: string }; Returns: undefined }
+      credit_wallet_from_topup: {
+        Args: { p_payment_intent_id: string; p_session_id: string }
+        Returns: undefined
+      }
       decline_payment_request: {
         Args: { p_request_id: string }
         Returns: undefined
