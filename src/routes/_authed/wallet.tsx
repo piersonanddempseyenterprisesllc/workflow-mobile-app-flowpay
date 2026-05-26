@@ -19,6 +19,7 @@ import {
 import { ArrowUpRight, ArrowDownLeft, Plus, Check, X, Loader2, Send, HandCoins, Search, Info } from "lucide-react";
 import { toast } from "sonner";
 import { WalletTopupCheckout } from "@/components/WalletTopupCheckout";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
 export const Route = createFileRoute("/_authed/wallet")({ component: WalletPage });
 
