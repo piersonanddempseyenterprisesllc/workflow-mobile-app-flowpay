@@ -75,31 +75,14 @@ function WalletPage() {
   });
 
   const { data: friends = [] } = useQuery({
-    queryKey: ["wallet-friends", uid],
+    queryKey: ["wallet-people", uid],
     queryFn: async (): Promise<Friend[]> => {
-      const { data: rows } = await supabase
-        .from("friends")
-        .select("user_id, friend_id, status")
-        .or(`user_id.eq.${uid},friend_id.eq.${uid}`)
-        .eq("status", "active");
-      if (!rows) return [];
-      const otherIds = Array.from(
-        new Set(rows.map((r) => (r.user_id === uid ? r.friend_id : r.user_id))),
-      );
-      if (!otherIds.length) return [];
-      const { data: reverse } = await supabase
-        .from("friends")
-        .select("user_id, friend_id, status")
-        .in("user_id", otherIds)
-        .eq("friend_id", uid)
-        .eq("status", "active");
-      const mutualIds = new Set((reverse ?? []).map((r) => r.user_id));
-      const finalIds = otherIds.filter((id) => mutualIds.has(id));
-      if (!finalIds.length) return [];
       const { data: profiles } = await supabase
         .from("profiles")
         .select("id, full_name, avatar_url")
-        .in("id", finalIds);
+        .neq("id", uid)
+        .order("full_name", { ascending: true })
+        .limit(500);
       return (profiles ?? []) as Friend[];
     },
   });
