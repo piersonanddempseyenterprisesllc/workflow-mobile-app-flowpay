@@ -45,7 +45,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "Workflow — Shifts & Friends" },
       { name: "description", content: "A calm, premium app for shift workers: schedule and connect with coworkers." },
-      { name: "theme-color", content: "#f6f3eb" },
+      { name: "theme-color", content: "#8B7AFF" },
       { property: "og:title", content: "Workflow — Shifts & Friends" },
       { name: "twitter:title", content: "Workflow — Shifts & Friends" },
       { property: "og:description", content: "A calm, premium app for shift workers: schedule and connect with coworkers." },

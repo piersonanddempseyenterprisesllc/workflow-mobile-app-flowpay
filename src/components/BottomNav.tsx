@@ -28,7 +28,7 @@ export function BottomNav() {
       aria-label="Primary"
     >
       <div className="app-shell !pb-0 !min-h-0 pointer-events-auto">
-        <div className="mx-3 relative rounded-[28px] bg-card/95 backdrop-blur-xl border border-border/60 shadow-[0_12px_40px_-12px_oklch(0.3_0.02_150/0.22)] px-2 py-2 flex items-center justify-between">
+        <div className="mx-3 relative rounded-[28px] bg-card/95 backdrop-blur-xl border border-border/60 shadow-[0_12px_40px_-12px_oklch(0.3_0.02_300/0.22)] px-2 py-2 flex items-center justify-between">
           {/* Schedule */}
           <NavItem item={items[0]} active={pathname.startsWith(items[0].to)} />
 

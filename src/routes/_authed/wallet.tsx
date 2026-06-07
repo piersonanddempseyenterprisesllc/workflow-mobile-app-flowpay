@@ -331,14 +331,14 @@ function TxRow({ tx, uid, who }: { tx: Transaction; uid: string; who?: Friend })
         <div className="text-xs text-muted-foreground truncate">{tx.note || (incoming ? "Received" : "Sent")} · {date}</div>
       </div>
       <div className="text-right">
-        <div className={`text-sm font-semibold tabular-nums ${incoming ? "text-[oklch(0.5_0.13_155)]" : "text-foreground"}`}>
+        <div className={`text-sm font-semibold tabular-nums ${incoming ? "text-[oklch(0.5_0.13_165)]" : "text-foreground"}`}>
           {incoming ? "+" : "−"}{money(incoming ? Number(tx.amount) - Number(tx.fee) : Number(tx.amount))}
         </div>
         {!incoming && Number(tx.fee) > 0 && (
           <div className="text-[10px] text-muted-foreground">fee {money(Number(tx.fee))}</div>
         )}
       </div>
-      <div className={`w-7 h-7 rounded-full flex items-center justify-center ${incoming ? "bg-[oklch(0.92_0.06_155)] text-[oklch(0.4_0.08_155)]" : "bg-muted text-muted-foreground"}`}>
+      <div className={`w-7 h-7 rounded-full flex items-center justify-center ${incoming ? "bg-[oklch(0.92_0.06_165)] text-[oklch(0.35_0.08_165)]" : "bg-muted text-muted-foreground"}`}>
         {incoming ? <ArrowDownLeft className="w-3.5 h-3.5" /> : <ArrowUpRight className="w-3.5 h-3.5" />}
       </div>
     </div>
