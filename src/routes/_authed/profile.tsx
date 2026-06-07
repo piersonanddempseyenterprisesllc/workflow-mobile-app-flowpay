@@ -11,9 +11,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
   LogOut, Plus, Check, Camera, Loader2,
-  Settings, Users, ShieldCheck, Bell, ChevronRight,
+  Settings, Users, ShieldCheck, Bell, ChevronRight, Palette,
 } from "lucide-react";
 import { toast } from "sonner";
+import { ThemePicker } from "@/components/ThemePicker";
 
 export const Route = createFileRoute("/_authed/profile")({ component: ProfilePage });
 
@@ -46,9 +47,9 @@ function ProfilePage() {
 
       {/* Identity card */}
       <div className="relative overflow-hidden soft-card p-5 flex items-center gap-4">
-        <Avatar className="w-16 h-16">
+        <Avatar className="w-16 h-16 ring-2 ring-white">
           <AvatarImage src={profile?.avatar_url ?? undefined} />
-          <AvatarFallback className="bg-[oklch(0.92_0.06_300)] text-[oklch(0.4_0.15_290)] font-semibold text-lg">
+          <AvatarFallback className="bg-gradient-brand text-white font-semibold text-lg">
             {initials}
           </AvatarFallback>
         </Avatar>
@@ -58,10 +59,18 @@ function ProfilePage() {
         </div>
         <div
           aria-hidden
-          className="absolute -right-8 -top-8 w-32 h-32 rounded-full opacity-60"
-          style={{ background: "radial-gradient(circle, oklch(0.92 0.06 300), transparent 70%)" }}
+          className="absolute -right-10 -top-10 w-36 h-36 rounded-full opacity-30 bg-gradient-brand blur-2xl"
         />
       </div>
+
+      {/* Appearance — theme picker */}
+      <section className="mt-6">
+        <div className="flex items-center gap-2 mb-3 px-1">
+          <Palette className="w-4 h-4 text-muted-foreground" />
+          <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Appearance</h2>
+        </div>
+        <ThemePicker />
+      </section>
 
       {/* Action rows */}
       <div className="mt-4 space-y-3">
