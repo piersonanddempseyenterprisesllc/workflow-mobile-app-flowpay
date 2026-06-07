@@ -46,54 +46,55 @@
 :root {
   --radius: 1rem;
 
-  /* Warm cream canvas */
-  --background: oklch(0.985 0.012 85);
-  --foreground: oklch(0.24 0.018 150);
+  /* Lavender cream canvas */
+  --background: oklch(0.98 0.008 300);
+  --foreground: oklch(0.22 0.02 300);
 
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.24 0.018 150);
+  --card-foreground: oklch(0.22 0.02 300);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.24 0.018 150);
+  --popover-foreground: oklch(0.22 0.02 300);
 
-  /* Deep sage green */
-  --primary: oklch(0.38 0.045 155);
-  --primary-foreground: oklch(0.985 0.012 85);
+  /* Rich purple */
+  --primary: oklch(0.55 0.15 300);
+  --primary-foreground: oklch(0.98 0.005 300);
 
-  --secondary: oklch(0.94 0.018 90);
-  --secondary-foreground: oklch(0.32 0.025 150);
+  --secondary: oklch(0.93 0.025 300);
+  --secondary-foreground: oklch(0.28 0.03 300);
 
-  --muted: oklch(0.95 0.012 85);
-  --muted-foreground: oklch(0.5 0.018 140);
+  --muted: oklch(0.94 0.012 300);
+  --muted-foreground: oklch(0.52 0.02 300);
 
-  --accent: oklch(0.92 0.04 150);
-  --accent-foreground: oklch(0.32 0.04 155);
+  /* Mint green accent */
+  --accent: oklch(0.92 0.06 165);
+  --accent-foreground: oklch(0.28 0.04 165);
 
-  /* Accent gold */
-  --gold: oklch(0.78 0.11 75);
-  --gold-foreground: oklch(0.28 0.04 60);
+  /* Lavender gold */
+  --gold: oklch(0.82 0.08 300);
+  --gold-foreground: oklch(0.3 0.05 300);
 
   /* Shift colors */
   --day-shift: oklch(0.78 0.12 70);
   --night-shift: oklch(0.42 0.09 265);
   --evening-shift: oklch(0.62 0.14 30);
   --oncall-shift: oklch(0.62 0.12 305);
-  --off-shift: oklch(0.55 0.05 155);
+  --off-shift: oklch(0.55 0.05 165);
 
   --destructive: oklch(0.55 0.18 25);
   --destructive-foreground: oklch(0.985 0.012 85);
 
-  --border: oklch(0.9 0.012 90);
-  --input: oklch(0.92 0.012 90);
-  --ring: oklch(0.5 0.045 155);
+  --border: oklch(0.88 0.015 300);
+  --input: oklch(0.9 0.01 300);
+  --ring: oklch(0.55 0.1 300);
 
-  --sidebar: oklch(0.985 0.012 85);
-  --sidebar-foreground: oklch(0.24 0.018 150);
-  --sidebar-primary: oklch(0.38 0.045 155);
-  --sidebar-primary-foreground: oklch(0.985 0.012 85);
-  --sidebar-accent: oklch(0.94 0.018 90);
-  --sidebar-accent-foreground: oklch(0.32 0.025 150);
-  --sidebar-border: oklch(0.9 0.012 90);
-  --sidebar-ring: oklch(0.5 0.045 155);
+  --sidebar: oklch(0.98 0.008 300);
+  --sidebar-foreground: oklch(0.22 0.02 300);
+  --sidebar-primary: oklch(0.55 0.15 300);
+  --sidebar-primary-foreground: oklch(0.98 0.005 300);
+  --sidebar-accent: oklch(0.93 0.025 300);
+  --sidebar-accent-foreground: oklch(0.28 0.03 300);
+  --sidebar-border: oklch(0.88 0.015 300);
+  --sidebar-ring: oklch(0.55 0.1 300);
 }
 
 @layer base {
@@ -131,6 +132,6 @@
   .soft-card {
     background: var(--color-card);
     border-radius: var(--radius-2xl);
-    box-shadow: 0 1px 2px oklch(0.3 0.02 150 / 0.04), 0 8px 24px -8px oklch(0.3 0.02 150 / 0.08);
+    box-shadow: 0 1px 2px oklch(0.3 0.02 300 / 0.04), 0 8px 24px -8px oklch(0.3 0.02 300 / 0.08);
   }
 }
