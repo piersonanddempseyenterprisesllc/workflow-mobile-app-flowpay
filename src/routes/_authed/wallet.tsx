@@ -186,7 +186,7 @@ function WalletPage() {
 
         <div className="grid grid-cols-3 gap-2 mt-5">
           <PillButton icon={Send} label="Send" onClick={() => setSendOpen(true)} />
-          <PillButton icon={RequestIcon} label="Request" onClick={() => setRequestOpen(true)} />
+          <PillButton icon={ArrowDownLeft} label="Request" onClick={() => setRequestOpen(true)} />
           <PillButton icon={Plus} label="Add" onClick={() => setAddOpen(true)} />
         </div>
 
