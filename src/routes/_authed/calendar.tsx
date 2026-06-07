@@ -435,7 +435,16 @@ function CalendarPage() {
   }, []);
 
   // Anchor month-list to start-of-month of today so it stays symmetric.
-  const anchorRef = useRef<Date>(startOfMonth(new Date()));
+  // Recomputed whenever `today` changes (midnight rollover / focus / tz change)
+  // so the list re-anchors around the real current month automatically.
+  const anchorRef = useRef<Date>(startOfMonth(today));
+  useEffect(() => {
+    const nextAnchor = startOfMonth(today);
+    if (!isSameMonth(nextAnchor, anchorRef.current)) {
+      anchorRef.current = nextAnchor;
+      didInitialScrollRef.current = false; // re-scroll to new current month
+    }
+  }, [today]);
   const [monthsBack, setMonthsBack] = useState(6);
   const [monthsForward, setMonthsForward] = useState(12);
   const scrollerRef = useRef<HTMLDivElement | null>(null);
@@ -458,7 +467,9 @@ function CalendarPage() {
     for (let i = -monthsBack; i <= monthsForward; i++)
       list.push(addMonths(anchorRef.current, i));
     return list;
-  }, [monthsBack, monthsForward]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [monthsBack, monthsForward, today]);
+
 
   // Scroll to current month on first mount
   useEffect(() => {
