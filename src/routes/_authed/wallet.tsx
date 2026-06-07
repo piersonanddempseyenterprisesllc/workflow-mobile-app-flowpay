@@ -16,7 +16,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { ArrowUpRight, ArrowDownLeft, Plus, Check, X, Loader2, Send, ArrowDownLeft as RequestIcon, Search, Info, WalletCards } from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft, Plus, Check, X, Loader2, Send, Search, Info, WalletCards } from "lucide-react";
 import { toast } from "sonner";
 import { WalletTopupCheckout } from "@/components/WalletTopupCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
