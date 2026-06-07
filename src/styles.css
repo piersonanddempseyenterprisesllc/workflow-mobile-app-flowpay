@@ -229,6 +229,22 @@
     line-height: 1;
     letter-spacing: -0.01em;
   }
+  .wordmark-bubble {
+    font-family: var(--font-script);
+    font-weight: 700;
+    line-height: 0.95;
+    letter-spacing: 0.005em;
+    background-image: var(--gradient-brand);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    -webkit-text-stroke: 2px rgba(255,255,255,0.85);
+    paint-order: stroke fill;
+    filter:
+      drop-shadow(0 2px 0 color-mix(in oklab, var(--grad-1) 35%, transparent))
+      drop-shadow(0 10px 22px color-mix(in oklab, var(--grad-3) 45%, transparent))
+      drop-shadow(0 24px 40px color-mix(in oklab, var(--grad-2) 30%, transparent));
+  }
   .bg-gradient-brand {
     background-image: var(--gradient-brand);
   }
