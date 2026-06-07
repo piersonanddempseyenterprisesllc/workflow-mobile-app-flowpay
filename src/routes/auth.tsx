@@ -106,8 +106,8 @@ function AuthPage() {
 
       <div className="app-shell flex-1 flex flex-col justify-center px-6 py-12 !pb-12">
         <div className="text-center mb-8">
-          <div className="mx-auto mb-5 inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-card shadow-[0_10px_40px_-12px_oklch(0.55_0.15_300/0.35)] ring-1 ring-border/60">
-            <img src={workflowLogo} alt="Workflow logo" width={64} height={64} className="w-14 h-14 rounded-xl" />
+          <div className="mb-4">
+            <span className="wordmark text-7xl">Workflow</span>
           </div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-card/70 backdrop-blur ring-1 ring-border/60 text-[11px] uppercase tracking-wider text-muted-foreground mb-3">
             <span className="w-1.5 h-1.5 rounded-full bg-primary" />
