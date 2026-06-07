@@ -97,11 +97,11 @@ function AuthPage() {
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-background flex flex-col">
-      {/* Ambient ombre background */}
+      {/* Ambient ombre background — driven by the active theme */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -top-32 -left-24 w-[28rem] h-[28rem] rounded-full bg-[oklch(0.75_0.18_295)] opacity-40 blur-3xl" />
-        <div className="absolute top-1/3 -right-32 w-[26rem] h-[26rem] rounded-full bg-[oklch(0.78_0.14_250)] opacity-45 blur-3xl" />
-        <div className="absolute bottom-[-8rem] left-1/4 w-[22rem] h-[22rem] rounded-full bg-[oklch(0.82_0.14_175)] opacity-45 blur-3xl" />
+        <div className="absolute -top-32 -left-24 w-[28rem] h-[28rem] rounded-full opacity-40 blur-3xl" style={{ background: "var(--grad-1)" }} />
+        <div className="absolute top-1/3 -right-32 w-[26rem] h-[26rem] rounded-full opacity-45 blur-3xl" style={{ background: "var(--grad-2)" }} />
+        <div className="absolute bottom-[-8rem] left-1/4 w-[22rem] h-[22rem] rounded-full opacity-45 blur-3xl" style={{ background: "var(--grad-3)" }} />
       </div>
 
       <div className="app-shell flex-1 flex flex-col justify-center px-6 py-12 !pb-12">

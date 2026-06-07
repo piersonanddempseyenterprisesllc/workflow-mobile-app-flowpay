@@ -47,7 +47,7 @@
 :root {
   --radius: 1rem;
 
-  /* Canva-inspired airy canvas */
+  /* Airy neutral canvas — themes only override brand tokens */
   --background: oklch(0.985 0.006 280);
   --foreground: oklch(0.22 0.03 280);
 
@@ -56,20 +56,11 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.22 0.03 280);
 
-  /* Canva purple */
-  --primary: oklch(0.55 0.22 295);
-  --primary-foreground: oklch(0.99 0.005 295);
-
-  /* Canva blue (used as secondary surfaces) */
   --secondary: oklch(0.94 0.03 250);
   --secondary-foreground: oklch(0.32 0.12 250);
 
   --muted: oklch(0.95 0.012 280);
   --muted-foreground: oklch(0.52 0.025 280);
-
-  /* Canva teal/green accent */
-  --accent: oklch(0.88 0.10 175);
-  --accent-foreground: oklch(0.30 0.08 175);
 
   --gold: oklch(0.82 0.08 300);
   --gold-foreground: oklch(0.3 0.05 300);
@@ -85,22 +76,112 @@
 
   --border: oklch(0.90 0.015 280);
   --input: oklch(0.92 0.012 280);
-  --ring: oklch(0.55 0.15 295);
 
   --sidebar: oklch(0.985 0.006 280);
   --sidebar-foreground: oklch(0.22 0.03 280);
-  --sidebar-primary: oklch(0.55 0.22 295);
-  --sidebar-primary-foreground: oklch(0.99 0.005 295);
   --sidebar-accent: oklch(0.94 0.03 250);
   --sidebar-accent-foreground: oklch(0.32 0.12 250);
   --sidebar-border: oklch(0.90 0.015 280);
-  --sidebar-ring: oklch(0.55 0.15 295);
 
-  /* Canva brand gradient (purple → blue → teal) */
-  --gradient-canva: linear-gradient(95deg, #7C3AED 0%, #3B82F6 50%, #10B981 100%);
+  /* --- Brand theme defaults (Canva Lux). Overridden by [data-theme="..."] --- */
+  --primary: oklch(0.55 0.22 305);
+  --primary-foreground: oklch(0.99 0.005 305);
+  --accent: oklch(0.78 0.18 330);
+  --accent-foreground: oklch(0.30 0.10 330);
+  --ring: oklch(0.55 0.15 305);
+  --sidebar-primary: oklch(0.55 0.22 305);
+  --sidebar-primary-foreground: oklch(0.99 0.005 305);
+  --sidebar-ring: oklch(0.55 0.15 305);
+
+  --grad-1: #7C3AED;
+  --grad-2: #A855F7;
+  --grad-3: #EC4899;
+  --grad-4: #F472B6;
+  --gradient-brand: linear-gradient(135deg, var(--grad-1) 0%, var(--grad-2) 35%, var(--grad-3) 70%, var(--grad-4) 100%);
+  --gradient-brand-soft: linear-gradient(135deg,
+    color-mix(in oklab, var(--grad-1) 18%, transparent),
+    color-mix(in oklab, var(--grad-3) 18%, transparent));
 }
 
+/* ---------- Theme: Canva Lux (default, also explicit selector) ---------- */
+[data-theme="canva-lux"] {
+  --primary: oklch(0.55 0.22 305);
+  --primary-foreground: oklch(0.99 0.005 305);
+  --accent: oklch(0.78 0.18 330);
+  --ring: oklch(0.55 0.15 305);
+  --grad-1: #7C3AED;
+  --grad-2: #A855F7;
+  --grad-3: #EC4899;
+  --grad-4: #F472B6;
+}
 
+/* ---------- Theme: Midnight Indigo ---------- */
+[data-theme="midnight"] {
+  --primary: oklch(0.50 0.20 275);
+  --primary-foreground: oklch(0.99 0.005 275);
+  --accent: oklch(0.72 0.16 285);
+  --ring: oklch(0.50 0.18 275);
+  --grad-1: #1E1B4B;
+  --grad-2: #4F46E5;
+  --grad-3: #7C3AED;
+  --grad-4: #A78BFA;
+}
+
+/* ---------- Theme: Sunset ---------- */
+[data-theme="sunset"] {
+  --primary: oklch(0.62 0.22 15);
+  --primary-foreground: oklch(0.99 0.005 15);
+  --accent: oklch(0.85 0.15 70);
+  --ring: oklch(0.62 0.18 15);
+  --grad-1: #FB923C;
+  --grad-2: #F43F5E;
+  --grad-3: #D946EF;
+  --grad-4: #FBBF24;
+}
+
+/* ---------- Theme: Ocean ---------- */
+[data-theme="ocean"] {
+  --primary: oklch(0.55 0.16 220);
+  --primary-foreground: oklch(0.99 0.005 220);
+  --accent: oklch(0.78 0.14 175);
+  --ring: oklch(0.55 0.14 220);
+  --grad-1: #0EA5E9;
+  --grad-2: #06B6D4;
+  --grad-3: #10B981;
+  --grad-4: #6EE7B7;
+}
+
+/* ---------- Theme: Rose Gold ---------- */
+[data-theme="rose-gold"] {
+  --primary: oklch(0.58 0.20 10);
+  --primary-foreground: oklch(0.99 0.005 10);
+  --accent: oklch(0.85 0.12 80);
+  --ring: oklch(0.58 0.18 10);
+  --grad-1: #E11D48;
+  --grad-2: #F472B6;
+  --grad-3: #FBBF24;
+  --grad-4: #FDE68A;
+}
+
+/* ---------- Theme: Noir Gold ---------- */
+[data-theme="noir-gold"] {
+  --primary: oklch(0.22 0.02 280);
+  --primary-foreground: oklch(0.95 0.05 90);
+  --accent: oklch(0.78 0.12 85);
+  --ring: oklch(0.55 0.10 85);
+  --grad-1: #0A0A0A;
+  --grad-2: #27272A;
+  --grad-3: #C9A84C;
+  --grad-4: #F0D78C;
+}
+
+/* Recompute the gradient values after any theme switch */
+[data-theme] {
+  --gradient-brand: linear-gradient(135deg, var(--grad-1) 0%, var(--grad-2) 35%, var(--grad-3) 70%, var(--grad-4) 100%);
+  --gradient-brand-soft: linear-gradient(135deg,
+    color-mix(in oklab, var(--grad-1) 18%, transparent),
+    color-mix(in oklab, var(--grad-3) 18%, transparent));
+}
 
 @layer base {
   * { border-color: var(--color-border); }
@@ -142,14 +223,24 @@
   .wordmark {
     font-family: var(--font-script);
     font-weight: 700;
-    background-image: var(--gradient-canva);
+    background-image: var(--gradient-brand);
     background-clip: text;
     color: transparent;
     line-height: 1;
     letter-spacing: -0.01em;
   }
-  .bg-gradient-canva {
-    background-image: var(--gradient-canva);
+  .bg-gradient-brand {
+    background-image: var(--gradient-brand);
+  }
+  .bg-gradient-brand-soft {
+    background-image: var(--gradient-brand-soft);
+  }
+  .text-gradient-brand {
+    background-image: var(--gradient-brand);
+    background-clip: text;
+    color: transparent;
+  }
+  .ring-brand {
+    box-shadow: 0 12px 40px -12px color-mix(in oklab, var(--grad-2) 55%, transparent);
   }
 }
-

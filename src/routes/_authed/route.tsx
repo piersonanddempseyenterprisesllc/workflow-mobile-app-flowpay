@@ -2,8 +2,15 @@ import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { BottomNav } from "@/components/BottomNav";
+import { ThemeProvider } from "@/lib/theme-context";
 
-export const Route = createFileRoute("/_authed")({ component: AuthedLayout });
+export const Route = createFileRoute("/_authed")({
+  component: () => (
+    <ThemeProvider>
+      <AuthedLayout />
+    </ThemeProvider>
+  ),
+});
 
 function AuthedLayout() {
   const { user, loading } = useAuth();
