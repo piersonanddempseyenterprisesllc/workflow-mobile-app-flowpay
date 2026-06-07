@@ -17,7 +17,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authed/profile")({ component: ProfilePage });
 
-type Sheet = null | "edit" | "coworkers" | "sharing" | "notifications";
+type SheetKey = null | "edit" | "coworkers" | "sharing" | "notifications";
 
 function ProfilePage() {
   const { user, signOut } = useAuth();
@@ -32,7 +32,7 @@ function ProfilePage() {
     enabled: !!user,
   });
 
-  const [openSheet, setOpenSheet] = useState<Sheet>(null);
+  const [openSheet, setOpenSheet] = useState<SheetKey>(null);
 
   const name = profile?.full_name ?? "";
   const initials = (name || user?.email || "?")
