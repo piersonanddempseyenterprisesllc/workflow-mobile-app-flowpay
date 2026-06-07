@@ -12,6 +12,19 @@ import { Eye, EyeOff } from "lucide-react";
 export const Route = createFileRoute("/auth")({ component: AuthPage });
 
 const USERNAME_RE = /^[A-Za-z0-9_]{3,20}$/;
+
+function passwordStrength(pw: string): "empty" | "weak" | "fair" | "strong" {
+  if (!pw) return "empty";
+  let score = 0;
+  if (pw.length >= 6) score++;
+  if (pw.length >= 10) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  if (score <= 1) return "weak";
+  if (score <= 3) return "fair";
+  return "strong";
+}
 const REMEMBER_KEY = "workflow.rememberEmail";
 
 function AuthPage() {
