@@ -174,10 +174,7 @@ function WalletPage() {
       <PaymentTestModeBanner />
 
       {/* FlowPay gradient hero card */}
-      <div
-        className="relative overflow-hidden rounded-[28px] p-5 text-white mt-2 shadow-[0_24px_60px_-24px_oklch(0.4_0.18_280/0.55)]"
-        style={{ background: "linear-gradient(135deg, #7C5CFF 0%, #5B7CFF 45%, #3CD2A8 110%)" }}
-      >
+      <div className="relative overflow-hidden rounded-[28px] p-5 text-white mt-2 bg-gradient-brand ring-brand">
         <div className="flex items-center gap-2 text-sm font-medium opacity-95">
           <WalletCards className="w-4 h-4" />
           FlowPay Balance
@@ -198,7 +195,7 @@ function WalletPage() {
         <div
           aria-hidden
           className="absolute -left-12 -bottom-16 w-44 h-44 rounded-full opacity-20"
-          style={{ background: "radial-gradient(circle, #3CD2A8 0%, transparent 70%)" }}
+          style={{ background: "radial-gradient(circle, #ffffff 0%, transparent 70%)" }}
         />
       </div>
 

@@ -3,8 +3,8 @@ import { Calendar, Wallet, User, Plus } from "lucide-react";
 
 const items = [
   { to: "/calendar", label: "Schedule", icon: Calendar },
-  { to: "/wallet", label: "FlowPay", icon: Wallet },
-  { to: "/profile", label: "Profile", icon: User },
+  { to: "/wallet", label: "Pay", icon: Wallet },
+  { to: "/profile", label: "Me", icon: User },
 ] as const;
 
 export function BottomNav() {
@@ -39,13 +39,10 @@ export function BottomNav() {
             aria-label="Add Shift"
             className="relative -mt-7 flex flex-col items-center justify-center"
           >
-            <span
-              className="w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-[0_12px_24px_-8px_oklch(0.5_0.18_280/0.55)] active:scale-95 transition-transform"
-              style={{ background: "linear-gradient(135deg, #7C5CFF 0%, #5B7CFF 45%, #3CD2A8 100%)" }}
-            >
+            <span className="w-14 h-14 rounded-2xl flex items-center justify-center text-white bg-gradient-brand ring-brand active:scale-95 transition-transform">
               <Plus className="w-7 h-7" strokeWidth={2.5} />
             </span>
-            <span className="text-[10px] font-semibold tracking-wide mt-1 bg-gradient-to-r from-[#7C5CFF] to-[#3CD2A8] bg-clip-text text-transparent">
+            <span className="text-[10px] font-semibold tracking-wide mt-1 text-gradient-brand">
               Add Shift
             </span>
           </button>
