@@ -420,6 +420,20 @@ function CalendarPage() {
     };
   }, []);
 
+  // Listen for the global "Add Shift" FAB so the bottom nav can trigger
+  // the shift picker from anywhere in the app.
+  useEffect(() => {
+    const onAdd = () => {
+      const key = format(new Date(), "yyyy-MM-dd");
+      setMultiMode(true);
+      setSelected(null);
+      setSelectedDays((prev) => (prev.size > 0 ? prev : new Set([key])));
+      setPickerOpen(true);
+    };
+    window.addEventListener("workflow:add-shift", onAdd);
+    return () => window.removeEventListener("workflow:add-shift", onAdd);
+  }, []);
+
   // Anchor month-list to start-of-month of today so it stays symmetric.
   const anchorRef = useRef<Date>(startOfMonth(new Date()));
   const [monthsBack, setMonthsBack] = useState(6);

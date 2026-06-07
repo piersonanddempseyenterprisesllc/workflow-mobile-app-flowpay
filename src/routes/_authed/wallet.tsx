@@ -16,7 +16,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { ArrowUpRight, ArrowDownLeft, Plus, Check, X, Loader2, Send, HandCoins, Search, Info } from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft, Plus, Check, X, Loader2, Send, Search, Info, WalletCards } from "lucide-react";
 import { toast } from "sonner";
 import { WalletTopupCheckout } from "@/components/WalletTopupCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
@@ -163,6 +163,7 @@ function WalletPage() {
   const [sendOpen, setSendOpen] = useState(false);
   const [requestOpen, setRequestOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  const [tab, setTab] = useState<"activity" | "requests">("activity");
 
   const pendingIncoming = requests.filter((r) => r.status === "pending" && r.receiver_id === uid);
   const pendingOutgoing = requests.filter((r) => r.status === "pending" && r.requester_id === uid);
@@ -171,67 +172,104 @@ function WalletPage() {
   return (
     <div className="pb-6">
       <PaymentTestModeBanner />
-      <header className="pt-1 pb-5">
-        <h1 className="font-serif text-3xl">Wallet</h1>
-        <p className="text-sm text-muted-foreground mt-1">Move money between friends, instantly.</p>
-      </header>
 
+      {/* FlowPay gradient hero card */}
       <div
-        className="relative overflow-hidden rounded-3xl p-6 text-primary-foreground shadow-[0_20px_50px_-20px_oklch(0.3_0.04_155/0.4)]"
-        style={{ background: "linear-gradient(135deg, oklch(0.38 0.045 155) 0%, oklch(0.32 0.05 165) 60%, oklch(0.42 0.08 75) 140%)" }}
+        className="relative overflow-hidden rounded-[28px] p-5 text-white mt-2 shadow-[0_24px_60px_-24px_oklch(0.4_0.18_280/0.55)]"
+        style={{ background: "linear-gradient(135deg, #7C5CFF 0%, #5B7CFF 45%, #3CD2A8 110%)" }}
       >
-        <div className="text-[11px] uppercase tracking-[0.18em] opacity-75">Available balance</div>
-        <div className="mt-2 font-serif text-5xl tabular-nums">{money(balance)}</div>
-        <div className="mt-1 text-xs opacity-70">USD · Workflow Wallet</div>
+        <div className="flex items-center gap-2 text-sm font-medium opacity-95">
+          <WalletCards className="w-4 h-4" />
+          FlowPay Balance
+        </div>
+        <div className="mt-2 font-serif text-5xl tabular-nums tracking-tight">{money(balance)}</div>
+
+        <div className="grid grid-cols-3 gap-2 mt-5">
+          <PillButton icon={Send} label="Send" onClick={() => setSendOpen(true)} />
+          <PillButton icon={ArrowDownLeft} label="Request" onClick={() => setRequestOpen(true)} />
+          <PillButton icon={Plus} label="Add" onClick={() => setAddOpen(true)} />
+        </div>
+
         <div
-          className="absolute -right-12 -bottom-12 w-48 h-48 rounded-full opacity-15"
-          style={{ background: "radial-gradient(circle, oklch(0.95 0.1 75), transparent 70%)" }}
+          aria-hidden
+          className="absolute -right-10 -top-10 w-40 h-40 rounded-full opacity-25"
+          style={{ background: "radial-gradient(circle, #ffffff 0%, transparent 70%)" }}
+        />
+        <div
+          aria-hidden
+          className="absolute -left-12 -bottom-16 w-44 h-44 rounded-full opacity-20"
+          style={{ background: "radial-gradient(circle, #3CD2A8 0%, transparent 70%)" }}
         />
       </div>
 
-      <div className="grid grid-cols-3 gap-2 mt-4">
-        <ActionButton icon={Send} label="Send" onClick={() => setSendOpen(true)} />
-        <ActionButton icon={HandCoins} label="Request" onClick={() => setRequestOpen(true)} />
-        <ActionButton icon={Plus} label="Add money" onClick={() => setAddOpen(true)} />
+      {/* Activity / Requests tab toggle */}
+      <div className="mt-5 rounded-full bg-muted/70 p-1 grid grid-cols-2 text-sm font-medium">
+        {(["activity", "requests"] as const).map((t) => {
+          const active = tab === t;
+          const count = t === "requests" ? pendingIncoming.length : 0;
+          return (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`h-10 rounded-full transition-all flex items-center justify-center gap-1.5 ${
+                active ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+              }`}
+            >
+              {t === "activity" ? "Activity" : "Requests"}
+              {count > 0 && (
+                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-[oklch(0.55_0.18_25)] text-white">
+                  {count}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      {pendingIncoming.length > 0 && (
-        <section className="mt-6">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground mb-2 px-1">Action needed</h2>
-          <div className="space-y-2">
-            {pendingIncoming.map((r) => (
-              <IncomingRequestRow key={r.id} request={r} who={counterparties[r.requester_id]} balance={balance} />
-            ))}
-          </div>
+      {tab === "activity" ? (
+        <section className="mt-5">
+          {txs.length === 0 ? (
+            <EmptyState
+              title="No transactions yet"
+              subtitle="Send or request money from coworkers"
+            />
+          ) : (
+            <div className="soft-card divide-y divide-border/60">
+              {txs.map((t) => (
+                <TxRow key={t.id} tx={t} uid={uid} who={counterparties[t.sender_id === uid ? t.receiver_id : t.sender_id]} />
+              ))}
+            </div>
+          )}
+        </section>
+      ) : (
+        <section className="mt-5 space-y-3">
+          {pendingIncoming.length === 0 && pendingOutgoing.length === 0 ? (
+            <EmptyState
+              title="No pending requests"
+              subtitle="Money requests show up here"
+            />
+          ) : (
+            <>
+              {pendingIncoming.length > 0 && (
+                <div className="space-y-2">
+                  <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground px-1">Action needed</h2>
+                  {pendingIncoming.map((r) => (
+                    <IncomingRequestRow key={r.id} request={r} who={counterparties[r.requester_id]} balance={balance} />
+                  ))}
+                </div>
+              )}
+              {pendingOutgoing.length > 0 && (
+                <div className="space-y-2 pt-2">
+                  <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground px-1">Waiting on them</h2>
+                  {pendingOutgoing.map((r) => (
+                    <OutgoingRequestRow key={r.id} request={r} who={counterparties[r.receiver_id]} />
+                  ))}
+                </div>
+              )}
+            </>
+          )}
         </section>
       )}
-
-      {pendingOutgoing.length > 0 && (
-        <section className="mt-6">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground mb-2 px-1">Waiting on them</h2>
-          <div className="space-y-2">
-            {pendingOutgoing.map((r) => (
-              <OutgoingRequestRow key={r.id} request={r} who={counterparties[r.receiver_id]} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      <section className="mt-6">
-        <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground mb-2 px-1">Activity</h2>
-        {txs.length === 0 ? (
-          <div className="soft-card p-6 text-center">
-            <div className="font-serif text-lg">No activity yet</div>
-            <p className="text-sm text-muted-foreground mt-1">Send money to anyone to get started.</p>
-          </div>
-        ) : (
-          <div className="soft-card divide-y divide-border/60">
-            {txs.map((t) => (
-              <TxRow key={t.id} tx={t} uid={uid} who={counterparties[t.sender_id === uid ? t.receiver_id : t.sender_id]} />
-            ))}
-          </div>
-        )}
-      </section>
 
       <SendDialog
         open={sendOpen}
@@ -255,17 +293,27 @@ function WalletPage() {
   );
 }
 
-function ActionButton({ icon: Icon, label, onClick }: { icon: React.ElementType; label: string; onClick: () => void }) {
+function PillButton({ icon: Icon, label, onClick }: { icon: React.ElementType; label: string; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="soft-card flex flex-col items-center justify-center gap-1.5 py-3.5 active:scale-[0.98] transition-transform"
+      className="rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-sm border border-white/20 px-3 py-2.5 flex items-center justify-center gap-1.5 text-sm font-semibold text-white active:scale-[0.97] transition-all"
     >
-      <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-        <Icon className="w-[18px] h-[18px]" strokeWidth={2} />
-      </div>
-      <span className="text-xs font-medium">{label}</span>
+      <Icon className="w-4 h-4" strokeWidth={2.2} />
+      {label}
     </button>
+  );
+}
+
+function EmptyState({ title, subtitle }: { title: string; subtitle: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-14 text-center">
+      <div className="w-14 h-14 rounded-2xl bg-muted/70 flex items-center justify-center text-muted-foreground mb-4">
+        <WalletCards className="w-6 h-6" />
+      </div>
+      <div className="font-medium">{title}</div>
+      <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
+    </div>
   );
 }
 
