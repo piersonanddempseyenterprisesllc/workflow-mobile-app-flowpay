@@ -1,95 +1,78 @@
 
-# Workflow — App Store Readiness Plan
+# Plan: Make Workflow effortless, expensive, and actually work
 
-A lot landed in your last reply, so I'm splitting it into phases. Each phase is shippable on its own. Approve this plan and I'll start at Phase 1; we can re-scope between phases.
+Three streams, shipped together: **FlowPay (real money)**, **Ombre theme system**, **Navigation overhaul**.
 
 ---
 
-## Phase 1 — Cleanup & navigation foundation
+## 1. FlowPay — make it actually work
 
-Goal: nothing broken, nothing leftover, everything obvious.
+Good news: the database is already set up (`wallets`, `wallet_topups`, `transactions`, `payment_requests`, `send_money`, `approve_payment_request`, `credit_wallet_from_topup`), Stripe sandbox is connected, and the webhook route exists. Missing pieces:
 
-- Land users on **Calendar** after sign-in (already does; also make `/` redirect to `/calendar`).
-- **BottomNav** (5 tabs, correct icons + labels):
-  1. Calendar
-  2. Compare (renamed from Colleagues)
-  3. Messages (new — DMs)
-  4. Wallet (FlowPay-style)
-  5. Profile
-- Remove the FlowPay card from `/home` and retire the `/home` route (its dashboard role is absorbed by Calendar + Wallet).
-- Add a **global back button** in a top app bar on every non-root screen (uses `router.history.back()`).
-- Confirm scroll works on every screen (calendar already does; audit Profile / Compare / Wallet / Messages).
-- Empty states everywhere with one-tap "what to do next".
+- **Webhook → wallet credit**: extend `src/routes/api/public/payments/webhook.ts` to handle `checkout.session.completed` for `kind: "wallet_topup"` and call the existing `credit_wallet_from_topup` RPC. Today the webhook only handles subscriptions, so top-ups never credit.
+- **Top-up UI**: polish `wallet.tsx` so "Add money" opens a sheet with quick amounts ($10 / $25 / $50 / $100 / custom) → embedded Stripe Checkout → returns to `/wallet/return` and auto-refreshes balance.
+- **Send / Request flows**: friend picker (existing `friends` table) + amount + note. Wire to `send_money` RPC and `payment_requests` insert.
+- **Activity feed**: unified list of transactions + topups + requests, with status pills.
+- **Test-mode banner**: keep at the top of `/wallet`.
 
-## Phase 2 — Calendar restructure (NurseGrid feel)
+When all green, FlowPay actually moves real money (sandbox now, live after Stripe go-live).
 
-- Move category tabs to the **top of Calendar**, in this fixed order: **Work, Vacation, Events, Appointments**.
-- Add a **"+ Add tab"** affordance at the **bottom** of the tab strip that creates a custom category (stored per user).
-- Tap a day → bottom sheet with **time + location + notes + workplace** (already most of this; surface location prominently).
-- Keep month-scroll, multi-select, themes — all working.
+## 2. Ombre theme system — pick your gradient
 
-## Phase 3 — Sharing & "Compare" (replaces Colleagues)
+Six curated presets, applied app-wide (background, primary, buttons, FAB, cards, wordmark, BottomNav active state):
 
-- Rename screen to **Compare**. Top section: friends' upcoming schedules side-by-side with yours so you see who's on/off.
-- Sharing flow:
-  - "**Send my calendar**" button on Calendar with options: **Entire year**, **This month**, or **Pick dates**, and which categories to include (Work / Vacation / Events / Appointments / All).
-  - Recipient gets an in-app request → must **Accept** to view.
-  - On accept, both users become friends automatically (already in your `share_schedule_with` RPC — extend to require acceptance).
-  - Owner can **Revoke** access or **Block** a viewer (already supported; surface in Compare).
-- New **Invite** tab inside Compare: "Invite colleague" via shareable link / SMS / email (uses native share sheet on iOS).
+1. **Canva Lux** — Purple → Magenta → Pink *(default)*
+2. **Midnight Indigo** — Indigo → Violet
+3. **Sunset** — Coral → Magenta → Amber
+4. **Ocean** — Blue → Teal → Mint
+5. **Rose Gold** — Rose → Champagne
+6. **Noir Gold** — Black → Charcoal → Gold
 
-Schema changes:
-- New `share_requests` table (owner, viewer, scope_type, start_date, end_date, categories[], status).
-- Update `share_schedule_with` to create a pending request instead of immediate access.
+How it works:
+- Each preset is a set of CSS variables (`--gradient-brand`, `--primary`, `--accent`, surfaces) under `[data-theme="canva-lux"]`, `[data-theme="midnight"]`, etc.
+- A `ThemeProvider` reads `user_calendar_prefs.theme_id` (column already exists) and sets `data-theme` on `<html>`. No new table.
+- **Theme picker** in Profile → "Appearance": 6 gradient cards, tap to apply, persists to `user_calendar_prefs`.
+- Everything currently hardcoded (BottomNav FAB, auth ambient blurs, wordmark) switches to `var(--gradient-brand)`.
 
-## Phase 4 — Direct Messages
+## 3. Navigation — easy for any professional
 
-- New `/messages` route + `messages` and `conversations` tables.
-- 1:1 DMs between friends only (enforced by RLS).
-- Realtime via Supabase Realtime; unread badge on BottomNav.
-- Tap a friend in Compare → "Message".
-
-## Phase 5 — Wallet (Cash App / Venmo style)
-
-- Bring back a **Wallet** tab (not called FlowPay) with:
-  - Balance, Add money, Send, Request, History.
-  - **Send to friend** uses the existing `send_money` RPC.
-  - **Request money** uses the existing `payment_requests` table.
-  - Fee model: up to **3%** on sends (configurable; default 0% friends, 3% if flagged).
-- Real bank/card top-ups require Stripe — flagged here but **deferred** until you confirm you want to do the Stripe setup again. Until then the wallet is closed-loop (money only moves between users in-app).
-
-## Phase 6 — Onboarding
-
-3-step first-run flow after signup:
-1. Pick **profession** (or add a new one — already supported).
-2. Pick **workplace** (or add).
-3. Set **hourly rate** + optional avatar.
-Then land on Calendar.
-
-## Phase 7 — App Store packaging (Lovable → Codemagic → App Store)
-
-- Add **Capacitor** with `@capacitor/ios`, configure `capacitor.config.ts` with your bundle id, app name, splash, and icon.
-- Add `safe-area-inset` padding to top bar + BottomNav.
-- Generate icons + splash from your logo (1024×1024 source).
-- I'll produce a short README with the exact Codemagic workflow YAML (clone → npm install → vite build → cap sync ios → xcode-build → upload to App Store Connect).
-- You'll handle: Apple Developer account ($99/yr), App Store Connect listing (screenshots, privacy policy URL, app description), and signing certs in Codemagic.
+- **First-run onboarding**: 3-slide intro on first login — "Track shifts", "Get paid with FlowPay", "Share with coworkers". Dismissal stored in `user_calendar_prefs`.
+- **Long-press FAB**: tap `+` = Add Shift (today); long-press opens quick actions (Add Shift, Send Money, Request Money, Find Coworker).
+- **Clearer labels**: `Schedule`, `Pay`, `Me`. Active-tab gradient underline.
+- **Real Home** (`/_authed/home`): "Next shift", "Wallet balance", "Today's earnings" cards so anyone gets it instantly.
+- **Friendly empty states** on every list with a one-tap primary action.
 
 ---
 
 ## Technical details
 
-- All schema changes go through migrations (share_requests, conversations, messages, custom_categories).
-- RLS on every new table; messages restricted to participants; share_requests restricted to owner + viewer.
-- Realtime publication added for `messages`.
-- Back-button uses TanStack Router's `useRouter().history.back()`.
-- Capacitor build target: iOS 15+.
+**Migration**: none — `user_calendar_prefs.theme_id` already exists; `wallet_topups` already supports the flow.
 
-## What I'll do first if you approve
+**New files**:
+- `src/lib/theme-context.tsx`, `src/lib/themes.ts`, `src/components/ThemePicker.tsx`
+- `src/components/Onboarding.tsx`
+- `src/components/wallet/{TopupSheet,SendMoneySheet,RequestMoneySheet,ActivityList}.tsx`
+- `src/routes/_authed/home.tsx`
+- `src/lib/wallet.functions.ts` (wraps `send_money` / `approve_payment_request` RPCs)
 
-Phase 1 + Phase 2 in one pass (cleanup + calendar tabs reorder + add-tab + top app bar with back button). That alone makes the app feel dramatically more polished and is a clean stopping point if you want to test before going further.
+**Edits**:
+- `src/styles.css` — 6 `[data-theme]` blocks + `--gradient-brand`
+- `src/routes/api/public/payments/webhook.ts` — handle wallet top-up sessions
+- `src/routes/_authed/wallet.tsx` — rebuild
+- `src/components/BottomNav.tsx` — relabel, long-press menu, gradient driven by theme
+- `src/routes/_authed/profile.tsx` — Appearance section
+- `src/routes/_authed/route.tsx` — mount ThemeProvider + Onboarding gate
+- `src/routes/auth.tsx` — ambient blurs use theme gradient
 
-## Open questions before I start
+**Stripe**: sandbox works now. For real cards after publish, you'll need to complete Stripe go-live — I'll surface that in the Wallet UI if production keys aren't set.
 
-1. **Wallet for v1 App Store**: closed-loop (in-app only, no real bank top-ups) is fine for launch — confirm or say "skip wallet entirely for v1".
-2. **DMs**: text-only OK, or do you also want photo attachments?
-3. **App name & bundle id** for Capacitor (e.g. `com.yourname.workflow`).
+---
+
+## Out of scope (ask if you want these)
+
+- Custom two-color picker (you picked presets-only)
+- Bank payouts (Stripe Connect)
+- Push notifications for payment requests
+- KYC for high-volume live payments
+
+Approve to build, or tell me what to drop/add.
