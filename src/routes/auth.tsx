@@ -12,6 +12,19 @@ import { Eye, EyeOff } from "lucide-react";
 export const Route = createFileRoute("/auth")({ component: AuthPage });
 
 const USERNAME_RE = /^[A-Za-z0-9_]{3,20}$/;
+
+function passwordStrength(pw: string): "empty" | "weak" | "fair" | "strong" {
+  if (!pw) return "empty";
+  let score = 0;
+  if (pw.length >= 6) score++;
+  if (pw.length >= 10) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  if (score <= 1) return "weak";
+  if (score <= 3) return "fair";
+  return "strong";
+}
 const REMEMBER_KEY = "workflow.rememberEmail";
 
 function AuthPage() {
@@ -26,6 +39,7 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(true);
+  const [pwStrength, setPwStrength] = useState<"empty" | "weak" | "fair" | "strong">("empty");
 
   useEffect(() => { if (user) nav({ to: "/calendar" }); }, [user, nav]);
 
@@ -180,7 +194,8 @@ function AuthPage() {
               </div>
               <div className="relative mt-1.5">
                 <Input id="password" type={showPassword ? "text" : "password"} value={password}
-                  onChange={(e) => setPassword(e.target.value)} required minLength={6}
+                  onChange={(e) => { setPassword(e.target.value); setPwStrength(passwordStrength(e.target.value)); }}
+                  required
                   autoComplete={mode === "signin" ? "current-password" : "new-password"}
                   className="h-11 rounded-xl pr-12" />
                 <button type="button" onClick={() => setShowPassword((v) => !v)}
@@ -189,6 +204,30 @@ function AuthPage() {
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
+              {mode === "signup" && password && (
+                <div className="mt-2 space-y-1">
+                  <div className="flex gap-1 h-1">
+                    {([0, 1, 2] as const).map((i) => {
+                      const filled =
+                        pwStrength === "weak" ? i === 0 :
+                        pwStrength === "fair" ? i <= 1 :
+                        i <= 2;
+                      const color =
+                        pwStrength === "weak" ? "bg-destructive" :
+                        pwStrength === "fair" ? "bg-amber-400" :
+                        "bg-emerald-500";
+                      return (
+                        <div key={i} className={`flex-1 rounded-full transition-colors ${filled ? color : "bg-muted"}`} />
+                      );
+                    })}
+                  </div>
+                  <p className={`text-xs ${pwStrength === "weak" ? "text-destructive" : pwStrength === "fair" ? "text-amber-500" : "text-emerald-600"}`}>
+                    {pwStrength === "weak" ? "Weak password — it will still work, but consider adding more characters" :
+                     pwStrength === "fair" ? "Fair password" :
+                     "Strong password"}
+                  </p>
+                </div>
+              )}
             </div>
 
             <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer select-none pt-0.5">
