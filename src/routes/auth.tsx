@@ -99,29 +99,26 @@ function AuthPage() {
   }
 
   return (
-    <div className="min-h-[100dvh] relative overflow-hidden bg-background flex flex-col">
-      {/* Ambient ombre background */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -top-32 -left-24 w-[28rem] h-[28rem] rounded-full opacity-40 blur-3xl" style={{ background: "var(--grad-1)" }} />
-        <div className="absolute top-1/3 -right-32 w-[26rem] h-[26rem] rounded-full opacity-45 blur-3xl" style={{ background: "var(--grad-2)" }} />
-        <div className="absolute bottom-[-8rem] left-1/4 w-[22rem] h-[22rem] rounded-full opacity-45 blur-3xl" style={{ background: "var(--grad-3)" }} />
-      </div>
+    <div className="min-h-[100dvh] relative overflow-hidden bg-white flex flex-col">
+
 
       <div className="mx-auto w-full max-w-md flex-1 flex flex-col justify-center px-5 py-6">
-        <div
-          className="mb-6 rounded-3xl px-6 py-10 text-center shadow-[0_24px_60px_-20px_rgba(30,144,255,0.45)]"
-          style={{ background: "var(--gradient-brand)" }}
-        >
+        <div className="text-center mb-7">
           <span
-            className="inline-block text-white text-[5rem] sm:text-[6rem] leading-none"
+            className="inline-block text-[6rem] sm:text-[7.5rem] leading-none pb-2"
             style={{
               fontFamily: 'Pacifico, "Dancing Script", cursive',
-              textShadow: "0 2px 0 rgba(0,0,0,0.08), 0 12px 30px rgba(0,0,0,0.18)",
+              backgroundImage: "var(--gradient-brand)",
+              WebkitBackgroundClip: "text",
+              backgroundClip: "text",
+              color: "transparent",
+              filter: "drop-shadow(0 8px 24px color-mix(in oklab, var(--grad-3) 30%, transparent))",
             }}
           >
             Workflow
           </span>
         </div>
+
 
 
         <div className="soft-card p-5 sm:p-6 backdrop-blur bg-card/85 ring-1 ring-border/60 shadow-[0_20px_60px_-20px_oklch(0.55_0.15_300/0.25)]">
