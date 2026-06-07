@@ -105,7 +105,7 @@ function AuthPage() {
       <div className="mx-auto w-full max-w-md flex-1 flex flex-col justify-center px-5 py-6">
         <div className="text-center mb-7">
           <span
-            className="inline-block text-[6rem] sm:text-[7.5rem] leading-none pb-2"
+            className="inline-block text-[2.75rem] sm:text-[3.25rem] leading-none pb-1"
             style={{
               fontFamily: 'Pacifico, "Dancing Script", cursive',
               backgroundImage: "var(--gradient-brand)",
