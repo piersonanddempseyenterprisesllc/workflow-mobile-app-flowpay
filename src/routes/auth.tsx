@@ -39,6 +39,7 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(true);
+  const [pwStrength, setPwStrength] = useState<"empty" | "weak" | "fair" | "strong">("empty");
 
   useEffect(() => { if (user) nav({ to: "/calendar" }); }, [user, nav]);
 
