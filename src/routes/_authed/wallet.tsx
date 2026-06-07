@@ -317,20 +317,6 @@ function EmptyState({ title, subtitle }: { title: string; subtitle: string }) {
   );
 }
 
-function ActionButton({ icon: Icon, label, onClick }: { icon: React.ElementType; label: string; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className="soft-card flex flex-col items-center justify-center gap-1.5 py-3.5 active:scale-[0.98] transition-transform"
-    >
-      <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-        <Icon className="w-[18px] h-[18px]" strokeWidth={2} />
-      </div>
-      <span className="text-xs font-medium">{label}</span>
-    </button>
-  );
-}
-
 function TxRow({ tx, uid, who }: { tx: Transaction; uid: string; who?: Friend }) {
   const incoming = tx.receiver_id === uid;
   const date = new Date(tx.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" });
