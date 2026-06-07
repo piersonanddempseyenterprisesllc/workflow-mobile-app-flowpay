@@ -103,7 +103,7 @@ function AuthPage() {
 
 
       <div className="mx-auto w-full max-w-md flex-1 flex flex-col justify-center px-5 py-6">
-        <div className="text-center mb-7">
+        <div className="text-center mb-4">
           <span
             className="inline-block text-[2.75rem] sm:text-[3.25rem] leading-none pb-1"
             style={{
@@ -112,7 +112,7 @@ function AuthPage() {
               WebkitBackgroundClip: "text",
               backgroundClip: "text",
               color: "transparent",
-              filter: "drop-shadow(0 8px 24px color-mix(in oklab, var(--grad-3) 30%, transparent))",
+              filter: "drop-shadow(0 4px 14px color-mix(in oklab, var(--grad-3) 25%, transparent))",
             }}
           >
             Workflow
