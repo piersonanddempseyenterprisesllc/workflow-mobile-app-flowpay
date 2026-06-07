@@ -93,26 +93,26 @@
   --sidebar-primary-foreground: oklch(0.99 0.005 305);
   --sidebar-ring: oklch(0.55 0.15 305);
 
-  --grad-1: #1E1B4B;
-  --grad-2: #4F46E5;
-  --grad-3: #7C3AED;
-  --grad-4: #9333EA;
-  --gradient-brand: linear-gradient(135deg, var(--grad-1) 0%, var(--grad-2) 35%, var(--grad-3) 70%, var(--grad-4) 100%);
+  --grad-1: #00C4CC;
+  --grad-2: #1E90FF;
+  --grad-3: #6E45E2;
+  --grad-4: #8B5CF6;
+  --gradient-brand: linear-gradient(135deg, var(--grad-1) 0%, var(--grad-2) 40%, var(--grad-3) 75%, var(--grad-4) 100%);
   --gradient-brand-soft: linear-gradient(135deg,
     color-mix(in oklab, var(--grad-1) 18%, transparent),
     color-mix(in oklab, var(--grad-3) 18%, transparent));
 }
 
-/* ---------- Theme: Canva Lux (refined — deep indigo → violet) ---------- */
+/* ---------- Theme: Canva Lux (teal → blue → violet) ---------- */
 [data-theme="canva-lux"] {
-  --primary: oklch(0.50 0.20 285);
-  --primary-foreground: oklch(0.99 0.005 285);
-  --accent: oklch(0.72 0.16 290);
-  --ring: oklch(0.50 0.18 285);
-  --grad-1: #1E1B4B;
-  --grad-2: #4F46E5;
-  --grad-3: #7C3AED;
-  --grad-4: #9333EA;
+  --primary: oklch(0.55 0.20 270);
+  --primary-foreground: oklch(0.99 0.005 270);
+  --accent: oklch(0.75 0.14 220);
+  --ring: oklch(0.55 0.18 270);
+  --grad-1: #00C4CC;
+  --grad-2: #1E90FF;
+  --grad-3: #6E45E2;
+  --grad-4: #8B5CF6;
 }
 
 /* ---------- Theme: Midnight Indigo ---------- */
