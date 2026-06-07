@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, CalendarDays, Wallet, Users } from "lucide-react";
 import workflowLogo from "@/assets/workflow-logo.png";
 
 export const Route = createFileRoute("/auth")({ component: AuthPage });
@@ -96,15 +96,45 @@ function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen relative overflow-hidden bg-background flex flex-col">
+      {/* Ambient gradient background */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute -top-32 -left-24 w-[28rem] h-[28rem] rounded-full bg-[oklch(0.82_0.10_150)] opacity-40 blur-3xl" />
+        <div className="absolute top-1/3 -right-32 w-[26rem] h-[26rem] rounded-full bg-[oklch(0.85_0.10_75)] opacity-45 blur-3xl" />
+        <div className="absolute bottom-[-8rem] left-1/4 w-[22rem] h-[22rem] rounded-full bg-[oklch(0.80_0.09_30)] opacity-30 blur-3xl" />
+      </div>
+
       <div className="app-shell flex-1 flex flex-col justify-center px-6 py-12 !pb-12">
-        <div className="text-center mb-10">
-          <img src={workflowLogo} alt="Workflow logo" width={112} height={112} className="mx-auto mb-5 w-20 h-20 rounded-2xl" />
-          <h1 className="font-serif text-4xl text-foreground">Workflow</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Shifts and coworkers — one calm space.</p>
+        <div className="text-center mb-8">
+          <div className="mx-auto mb-5 inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-card shadow-[0_10px_40px_-12px_oklch(0.38_0.045_155/0.35)] ring-1 ring-border/60">
+            <img src={workflowLogo} alt="Workflow logo" width={64} height={64} className="w-14 h-14 rounded-xl" />
+          </div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-card/70 backdrop-blur ring-1 ring-border/60 text-[11px] uppercase tracking-wider text-muted-foreground mb-3">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+            Shifts · Pay · People
+          </div>
+          <h1 className="font-serif text-5xl leading-tight text-foreground">
+            Your week,<br/><span className="italic text-primary">beautifully in sync.</span>
+          </h1>
+          <p className="mt-3 text-sm text-muted-foreground max-w-sm mx-auto">
+            Plan shifts, split costs, and pay coworkers — all in one calm, gorgeous space.
+          </p>
+
+          <div className="mt-5 flex items-center justify-center gap-2 flex-wrap">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card/70 backdrop-blur ring-1 ring-border/60 text-xs text-foreground">
+              <CalendarDays className="h-3.5 w-3.5 text-primary" /> Smart schedule
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card/70 backdrop-blur ring-1 ring-border/60 text-xs text-foreground">
+              <Wallet className="h-3.5 w-3.5 text-primary" /> FlowPay
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card/70 backdrop-blur ring-1 ring-border/60 text-xs text-foreground">
+              <Users className="h-3.5 w-3.5 text-primary" /> Coworkers
+            </span>
+          </div>
         </div>
 
-        <div className="soft-card p-6">
+        <div className="soft-card p-6 backdrop-blur bg-card/85 ring-1 ring-border/60 shadow-[0_20px_60px_-20px_oklch(0.38_0.045_155/0.25)]">
+
           <div className="flex bg-muted rounded-full p-1 mb-6">
             {(["signin", "signup"] as const).map((m) => (
               <button key={m} type="button" onClick={() => setMode(m)}
