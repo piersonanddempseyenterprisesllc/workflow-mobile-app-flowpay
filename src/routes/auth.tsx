@@ -68,15 +68,20 @@ function AuthPage() {
     e.preventDefault();
     setLoading(true);
     try {
+      const normalizedEmail = email.trim().toLowerCase();
       if (mode === "signup") {
         const u = username.trim();
         if (!USERNAME_RE.test(u)) throw new Error("Username must be 3–20 letters, numbers, or underscores");
         if (usernameStatus === "taken") throw new Error("That username is taken");
         const { error } = await supabase.auth.signUp({
-          email, password,
+          email: normalizedEmail, password,
           options: { data: { full_name: name, username: u }, emailRedirectTo: `${window.location.origin}/calendar` },
         });
         if (error) {
+          if (/user already registered|already exists|user_already_exists/i.test(error.message)) {
+            setMode("signin");
+            throw new Error("That email already has an account. Sign in with its password, or use Forgot password to reset it.");
+          }
           if (/profiles_username_lower_unique|duplicate key/i.test(error.message)) {
             throw new Error("That username is taken");
           }
@@ -84,10 +89,15 @@ function AuthPage() {
         }
         toast.success("Welcome to Workflow");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        const { error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
+        if (error) {
+          if (/invalid login credentials|invalid_credentials/i.test(error.message)) {
+            throw new Error("That email exists, but the password does not match. Use Forgot password if you need a new one.");
+          }
+          throw error;
+        }
       }
-      if (remember) window.localStorage.setItem(REMEMBER_KEY, email);
+      if (remember) window.localStorage.setItem(REMEMBER_KEY, normalizedEmail);
       else window.localStorage.removeItem(REMEMBER_KEY);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
