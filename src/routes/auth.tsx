@@ -108,11 +108,21 @@ function AuthPage() {
       </div>
 
       <div className="mx-auto w-full max-w-md flex-1 flex flex-col justify-center px-5 py-6">
-        <div className="text-center mb-5">
-          <span className="wordmark-bubble text-[5.5rem] sm:text-[6.5rem] leading-none inline-block">
+        <div
+          className="mb-6 rounded-3xl px-6 py-10 text-center shadow-[0_24px_60px_-20px_rgba(30,144,255,0.45)]"
+          style={{ background: "var(--gradient-brand)" }}
+        >
+          <span
+            className="inline-block text-white text-[5rem] sm:text-[6rem] leading-none"
+            style={{
+              fontFamily: 'Pacifico, "Dancing Script", cursive',
+              textShadow: "0 2px 0 rgba(0,0,0,0.08), 0 12px 30px rgba(0,0,0,0.18)",
+            }}
+          >
             Workflow
           </span>
         </div>
+
 
         <div className="soft-card p-5 sm:p-6 backdrop-blur bg-card/85 ring-1 ring-border/60 shadow-[0_20px_60px_-20px_oklch(0.55_0.15_300/0.25)]">
           <div className="flex bg-muted rounded-full p-1 mb-5">
